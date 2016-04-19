@@ -8,7 +8,12 @@
 #include <iostream>
 #include <bitset>
 #include <string>
+#include <type_traits>
 
+//type safety check for integral types.
+#define IS_INTEGRAL(T) typename std::enable_if< std::is_integral<T>::value >::type* = 0
+
+//enumerated type for switch statement/human readable form
 enum opcode {
 	load, 
 	store, 
@@ -36,8 +41,9 @@ enum opcode {
 	write,
 	halt,
 	noop
-}; //string to store my opcode in human form
+};
 
+//hash function that looks for the opcode and returns the corresponding enum
 opcode hashit (std::string const& inString){
 	std::size_t position;
 
@@ -97,6 +103,7 @@ opcode hashit (std::string const& inString){
 	return load; //must return something bc function is non-void, treat as 0
 }
 
+//function to set the bits corresponding to the opcode [15:11]
 std::bitset<16> setOpcode(std::string instruction, std::bitset<16> VMinstruction){
 	switch(hashit(instruction)){
 		case load: //load & loadi = 00000 so change nothing
@@ -213,9 +220,9 @@ std::bitset<16> setOpcode(std::string instruction, std::bitset<16> VMinstruction
 	return VMinstruction;
 }
 
+//function to set the Immediate bit: by design, none of the opcodes contain 'i' unless it 
+//is an immediate instruction so simply set bit 8 dependent on whether 'i' is found
 std::bitset<16> setImmediate(std::string instruction, std::bitset<16> VMinstruction){
-	//by design, none of the opcodes contain 'i' unless it is an immediate instruction
-	//so simply set bit 8 dependent on whether it is found
 	std::size_t position;
 
 	position = instruction.find("i");
@@ -228,6 +235,7 @@ std::bitset<16> setImmediate(std::string instruction, std::bitset<16> VMinstruct
 	return VMinstruction;
 }
 
+//set the destination register bits [10:9], which can only be 0,1,2, or 3
 std::bitset<16> setDestinationReg(std::string instruction, std::bitset<16> VMinstruction){
 	std::size_t position;
 
@@ -252,6 +260,7 @@ std::bitset<16> setDestinationReg(std::string instruction, std::bitset<16> VMins
 	return VMinstruction;
 }
 
+//set the source register [7:6] which can only be 0,1,2,3
 std::bitset<16> setSourceReg(std::string instruction, std::bitset<16> VMinstruction){
 	std::size_t position;
 
@@ -276,9 +285,10 @@ std::bitset<16> setSourceReg(std::string instruction, std::bitset<16> VMinstruct
 	return VMinstruction;
 }
 
+//function to set either the address or const. address is 0-->256 and const is -128-->0-->128
 std::bitset<16> setAddress(std::string instruction, std::bitset<16> VMinstruction, bool isNeg){
 	std::size_t position;
-	//TODO: Check if bool isNeg is true, address is 0-->256 and const is -128-->0-->128
+	//TODO: Check if bool isNeg is true
 
 	position = instruction.rfind(' ');
 	position++; //get next character after first space
@@ -290,6 +300,13 @@ std::bitset<16> setAddress(std::string instruction, std::bitset<16> VMinstructio
 	std::cout << "str = " << iaddress <<".\n";
 	//TODO: set the VMinstruction address bits
 	return VMinstruction;
+}
+
+//function to convert a int or char byte into a bitset for copying.
+template<class T>
+std::bitset<8> intToBinString(T byte, IS_INTEGRAL(T)){
+	std::bitset<sizeof(T) * CHAR_BIT> bs(byte);
+	return bs;
 }
 
 int main(){
@@ -316,6 +333,10 @@ int main(){
 		setSourceReg("addci 2 1", test_instruction);
 		setAddress("addci 2 -256", test_instruction, true);
 	}
+
+	//testing my int to bitset function
+	unsigned char byte = 0x03; 
+	std::cout << "The int 3 was converted to " << intToBinString(byte) << ".\n";
 
 	return 0;
 }
