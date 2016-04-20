@@ -285,10 +285,16 @@ std::bitset<16> setSourceReg(std::string instruction, std::bitset<16> VMinstruct
 	return VMinstruction;
 }
 
+//function to convert a int or char byte into a bitset for copying.
+template<class T>
+std::bitset<8> intToBinString(T byte, IS_INTEGRAL(T)){
+	std::bitset<sizeof(T) * CHAR_BIT> bs(byte);
+	return bs;
+}
+
 //function to set either the address or const. address is 0-->256 and const is -128-->0-->128
-std::bitset<16> setAddress(std::string instruction, std::bitset<16> VMinstruction, bool isNeg){
+std::bitset<16> setAddress(std::string instruction, std::bitset<16> VMinstruction){
 	std::size_t position;
-	//TODO: Check if bool isNeg is true
 
 	position = instruction.rfind(' ');
 	position++; //get next character after first space
@@ -298,24 +304,26 @@ std::bitset<16> setAddress(std::string instruction, std::bitset<16> VMinstructio
 	int iaddress = std::stoi(address,&sz);
 
 	std::cout << "str = " << iaddress <<".\n";
-	//TODO: set the VMinstruction address bits
+
+	std::bitset<8> constAddress;
+	if (iaddress<0){ //the value is a const, can be neg, set to signed char
+		signed char byte = iaddress;
+		constAddress = intToBinString(byte);
+		std::cout << "The value of constAddress outside of if is: " << constAddress <<".\n";
+	} else { //the value is either an address, set to unsigned char
+		unsigned char byte = iaddress;
+		constAddress = intToBinString(byte);
+		std::cout << "The value of constAddress outside of if is: " << constAddress <<".\n";
+	}
+	//for each of the 8 bits in constant/address loop through and assign to VMinstruction
+	for (int i=0; i<=7; i++){
+		VMinstruction[i] = constAddress[i];
+	}
+
 	return VMinstruction;
 }
 
-//function to convert a int or char byte into a bitset for copying.
-template<class T>
-std::bitset<8> intToBinString(T byte, IS_INTEGRAL(T)){
-	std::bitset<sizeof(T) * CHAR_BIT> bs(byte);
-	return bs;
-}
-
 int main(){
-	int num1 = 4;
-	int num2 = 100;
-	printf("The value of %d in hex is %x. \n",num2,num2);
-	num2 = num2 >> 1;
-	printf("The value of %d in hex is %x. \n",num2,num2);
-
 	std::bitset<16> test_instruction;
 	std::cout << "Instruction: " << test_instruction << "\n";
 
@@ -324,19 +332,16 @@ int main(){
 	setOpcode("addc", instruction);
 	setOpcode("load 0 1", instruction);*/
 	for (int i=0; i<1; i++){
-		test_instruction = setOpcode("addci 2 1", test_instruction);
+		test_instruction = setOpcode("addci 2 -20", test_instruction);
 		std::cout << "The instruction has been changed to: " << test_instruction << ".\n";
-		test_instruction = setImmediate("addci 2 1", test_instruction);
+		test_instruction = setImmediate("addci 2 -20", test_instruction);
 		std::cout << "The instruction has been changed to: " << test_instruction << ".\n";
-		test_instruction = setDestinationReg("addci 2 1", test_instruction);
+		test_instruction = setDestinationReg("addci 2 -20", test_instruction);
 		std::cout << "The instruction has been changed to: " << test_instruction << ".\n";
-		setSourceReg("addci 2 1", test_instruction);
-		setAddress("addci 2 -256", test_instruction, true);
+		setSourceReg("addci 2 -20", test_instruction);
+		test_instruction = setAddress("addci 2 20", test_instruction);
+		std::cout << "The instruction has been changed to: " << test_instruction << ".\n";
 	}
-
-	//testing my int to bitset function
-	unsigned char byte = 0x03; 
-	std::cout << "The int 3 was converted to " << intToBinString(byte) << ".\n";
 
 	return 0;
 }
