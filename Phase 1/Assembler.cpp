@@ -6,6 +6,7 @@
 	//set immediate bit [8] (search for i at end of instruction)
 	//set either RS[7:6] or ADDR[7:0] based off value of i (0 or 1 respectively.)
 #include <iostream>
+#include <fstream>
 #include <bitset>
 #include <string>
 #include <type_traits>
@@ -265,7 +266,7 @@ std::bitset<16> setSourceReg(std::string instruction, std::bitset<16> VMinstruct
 	std::size_t position;
 
 	position = instruction.rfind(' ');
-	position++; //get next character after first space
+	position++; //get next character after second space
 
 	char RS = instruction[position];
 	int iRS = RS - '0';
@@ -327,21 +328,40 @@ int main(){
 	std::bitset<16> test_instruction;
 	std::cout << "Instruction: " << test_instruction << "\n";
 
-	/*setOpcode("load", instruction);
-	setOpcode("store", instruction);
-	setOpcode("addc", instruction);
-	setOpcode("load 0 1", instruction);*/
-	for (int i=0; i<1; i++){
-		test_instruction = setOpcode("addci 2 -20", test_instruction);
-		std::cout << "The instruction has been changed to: " << test_instruction << ".\n";
-		test_instruction = setImmediate("addci 2 -20", test_instruction);
-		std::cout << "The instruction has been changed to: " << test_instruction << ".\n";
-		test_instruction = setDestinationReg("addci 2 -20", test_instruction);
-		std::cout << "The instruction has been changed to: " << test_instruction << ".\n";
-		setSourceReg("addci 2 -20", test_instruction);
-		test_instruction = setAddress("addci 2 20", test_instruction);
-		std::cout << "The instruction has been changed to: " << test_instruction << ".\n";
+	//get user input to the assembly file
+	std::cout << "Input the file you wish to load: ";
+	std::string inFileName;
+	std::cin >> inFileName;
+
+	//create a string that will be the output file name
+	std::string outFileName = inFileName.substr(0,inFileName.length()-2);
+	outFileName = outFileName + ".o";
+
+	//open the input & output file streams
+	std::ofstream myOutput (outFileName);
+	std::ifstream myAssembly (inFileName);
+	std::string line;
+
+	if (myAssembly.is_open() && myOutput.is_open()){
+		while (getline(myAssembly,line)){
+			myOutput << line << "\n"; //output the original ass instruction
+			//convert to the bitset version and output
+			test_instruction = setOpcode(line, test_instruction);
+			test_instruction = setImmediate(line, test_instruction);
+			test_instruction = setDestinationReg(line, test_instruction);
+			test_instruction = setSourceReg(line, test_instruction);
+			test_instruction = setAddress(line, test_instruction);
+
+			myOutput << test_instruction << "\n";
+
+			//one final check to make sure it was set correctly
+			std::cout << "The instruction has been changed to: " << test_instruction << ".\n";
+		}
 	}
+
+	//good manners: close the file stream
+	myAssembly.close();
+	myOutput.close();
 
 	return 0;
 }
