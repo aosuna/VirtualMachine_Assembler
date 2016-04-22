@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <sstream>
 
 
 using namespace std;
@@ -56,16 +57,18 @@ class VirtualMachine{
                int sp;		//stack pointer
                int clock;	//clock counter
                int base; 	//base register
-               int limit;	//limit register
-               //bool ALU; 	//arithmetic and logic unit NOT SURE IF NEEDED??	
+               int limit;	//limit register size of the instructions
                string inFile; //reads in file
                string outFile;	//output a file
 			   map<int, FP> OPInstruc; //map instructions to function
 
            public:
-            	VirtualMachine(); //constructor
-				void run(string infile, string outfile); //execute the program init pc, ir, sr, clock, base, limit, here
-
+            	VirtualMachine();
+				void run(string fileName);
+				
+				//status register operations
+				void setCarry();
+ 
             	//assembly functions
             	void load();	//r[RD] = mem[ADDR]
                	void loadi();	//r[RD] = CONST (a const value)
@@ -99,8 +102,8 @@ class VirtualMachine{
                 void return_();	//pop and restore VM status
                 void read();	//read new content of r[RD] from .in file
                 void write();	//write r[RD] into .out file
-                void halt();	//halt execution exit()
-                void noop();	//no operation 
+                void halt();	//halt execution
+                void noop();	//no operation
 				
 };
 

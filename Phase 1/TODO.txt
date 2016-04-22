@@ -4,3 +4,9 @@ and which set the const/addr
 2) Use NEW keyword to wipe the instruction on each line
 3) Error handling
 
+
+Virtual Machine:
+1)Output file for Run Command, display results or .o file
+2)Function that need to be completed: shla(), shra(), compr(), compri(), write()
+3)Comment code for clarity
+4)test functions
