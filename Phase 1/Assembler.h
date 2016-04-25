@@ -275,6 +275,10 @@ void Assembler::setDestinationReg(std::string instruction){
 	if (position!=std::string::npos){
 		return; //do nothing
 	}
+	position = instruction.find("call");
+	if (position!=std::string::npos){
+		return; //do nothing
+	}
 
 	position = instruction.find(' ');
 	position++; //get next character after first space
