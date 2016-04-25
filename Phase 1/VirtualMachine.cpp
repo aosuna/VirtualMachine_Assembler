@@ -93,7 +93,7 @@ void VirtualMachine::run(string fileName){
 	}
 	
 	fstream outFile;
-	outFile.open(outFile.c_str(), ios::out);
+	outFile.open(fileName.c_str(), ios::out);
 	outFile << "clock: " << clock << endl;
 	outFile.close();
 	
@@ -599,18 +599,18 @@ void VirtualMachine::read(){
 	fstream oFile;
 	oFile.open(inFile.c_str(), ios::in);
 	
-	if (!inFile.is_open()) {
-		cout << inFile << " failed to open." << endl;
+	if (!oFile.is_open()) {
+		cout << oFile << " failed to open." << endl;
 		exit(7);
 	}
 	
 	string line;
 	int input;
 	
-	getline(inFile, line);
+	getline(oFile, line);
 	istringstream in(line.c_str());
 	in >> input;
-	infile.close;
+	oFile.close();
 	r[instr.f1.RD] = input;
 }
 
@@ -619,7 +619,7 @@ void VirtualMachine::write(){
 	
 	fstream outFile;
 	
-	outFile.open(outFile.c_str(), ios::out);
+	outFile.open(inFile.c_str(), ios::out);
 
 	outFile << r[instr.f1.RD] << endl;
 	outFile.close();
