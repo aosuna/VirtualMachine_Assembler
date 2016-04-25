@@ -1,4 +1,10 @@
-#include <iostream>
+/* *********************** 
+* Assembler.h
+*Written by Aaron Chamberlain & Adrian Osuna April 2016 at CSUSB
+*The header of the Assembler class which compiles a made-up assembly language
+* into an object file of integers to be run in the virtual machine
+*************************/
+
 #include <bitset>
 #include <string>
 #include <type_traits>
@@ -285,7 +291,6 @@ void Assembler::setDestinationReg(std::string instruction){
 
 	char RD = instruction[position];
 	int iRD = RD - '0';
-	std::cout << "Destination reg is: " << iRD << ".\n";
 
 	if (iRD == 1){
 		test_instruction[9] = 1;
@@ -343,7 +348,6 @@ void Assembler::setSourceReg(std::string instruction){
 
 	char RS = instruction[position];
 	int iRS = RS - '0';
-	std::cout << "Source reg is: " << iRS << ".\n";
 
 	if (iRS == 1){
 		test_instruction[6] = 1;
@@ -373,10 +377,7 @@ void Assembler::setAddress(std::string instruction){
 
 	std::string address = instruction.substr(position, instruction.length());
 	std::string::size_type sz;
-	std::cout << "Stoi is about to be called on: " << instruction << ".\n";
 	int iaddress = std::stoi(address,&sz);
-
-	std::cout << "str = " << iaddress <<".\n";
 
 	std::bitset<8> constAddress;
 	if (iaddress<0){ //the value is a const, can be neg, set to signed char
