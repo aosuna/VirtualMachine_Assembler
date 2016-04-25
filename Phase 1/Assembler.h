@@ -236,6 +236,7 @@ void Assembler::setOpcode(std::string instruction){
 		case call: //call = 10100 so change only bit 15,13
 			test_instruction[15] = 1;
 			test_instruction[13] = 1;
+			setAddress(instruction);
 			break;		
 		case ereturn: //return = 10101 so change only bit 15,13,11
 			test_instruction[15] = 1;
@@ -302,8 +303,14 @@ void Assembler::setImmediate(std::string instruction){
 	//all imm. instr. end w/ the character i with exception of jump(l/e/g),call & store
 	position = instruction.find("i");
 	if (position!=std::string::npos){
-		test_instruction[8] = 1; //if found, set to I to 1
-		setAddress(instruction);
+		//write will pass this condition but we don't want it, so return
+		position = instruction.find("write");
+		if (position!=std::string::npos){
+			return;
+		} else {	
+			test_instruction[8] = 1; //if found, set to I to 1
+			setAddress(instruction);
+		}
 	} else {
 		test_instruction[8] = 0; //explicity set to 0 to avoid problems.
 	}	

@@ -1,7 +1,6 @@
 Assembler:
-1) In switch determine which opcodes set the source reg
-and which set the const/addr
-3) Error handling
+1) tested for ex1, sub2, and add5 -->all working
+2) Error handling
 
 
 Virtual Machine:
