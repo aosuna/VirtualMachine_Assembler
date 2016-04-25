@@ -49,9 +49,10 @@ class VirtualMachine{
            private:
                static const int REG_FILE_SIZE = 4;
                static const int MEM_SIZE = 256;
-			   typedef void (VirtualMachine::*FP)(int); //declare pointer to void function pass int value into void
+			   typedef void (VirtualMachine::*FP)(); //declare pointer to void function pass int value into void
                vector<int> r;	//registers use only 0-3
                vector<int> mem; //256 words of memory
+			   instruction instr;
                int pc;		//program counter
                int ir;		//instruction register
                int sr;		//status register

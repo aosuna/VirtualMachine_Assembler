@@ -36,7 +36,7 @@ VirtualMachine::VirtualMachine(){
 void VirtualMachine::setCarry(){
 	int checkCarry = 0;
 	
-	checkCarry = r[instruction.f1.RD] & 0b10000000000000000;
+	checkCarry = r[instr.f1.RD] & 0b10000000000000000;
 	checkCarry = checkCarry >> 16;
 	
 	//check carry bit in sr first
@@ -73,10 +73,12 @@ void VirtualMachine::run(string fileName){
 	string line;
 	getline(oFile, line);
 	int limitSize = 0;
-	
+	int tempOP;
 	while (!oFile.eof()) {
 	//get line convert from string to int and store in memory location
-		mem[limitSize++] = stoi(line.c_str());
+		istringstream op(line.c_str());
+		op >> tempOP;
+		mem[limitSize++] = tempOP;
 		getline(oFile, line);
 	}
 	//set size of limit to the total size of the program
@@ -85,13 +87,13 @@ void VirtualMachine::run(string fileName){
 		//look at each instruction in memory
 		ir = mem[pc++];
 		//set the Int value of instruction to the instruction register
-		instruction.i = ir;
+		instr.i = ir;
 		//compare IR to Opcode 
-		if (this->*OPInstruc[instruction.f1.OP])();
+		(this->*OPInstruc[instr.f1.OP])();
 	}
 	
 	fstream outFile;
-	outFile.open(outFile.c_str(), ios::in | ios::out);
+	outFile.open(outFile.c_str(), ios::out);
 	outFile << "clock: " << clock << endl;
 	outFile.close();
 	
@@ -104,15 +106,15 @@ void VirtualMachine::load(){
 	clock += 4;
 	
 	//check I bit
-	if(instruction.f2.I == 0){
+	if(instr.f2.I == 0){
 		//check if loading out of range address
-		if(instruction.f2.ADDR < base || instruction.f2.ADDR > limit){
+		if(instr.f2.ADDR < base || instr.f2.ADDR > limit){
 			cout << "Address loaded is out of range." << endl;
 			exit(1);
 		}
 		else{
 			//set destination register to content in memory address
-			r[instruction.f2.RD] = mem[instruction.f2.ADDR];
+			r[instr.f2.RD] = mem[instr.f2.ADDR];
 		}
 	}
 	else{
@@ -125,18 +127,18 @@ void VirtualMachine::loadi(){
 	//load CONST to the destination register
 	clock += 1;
 	//load a constant in the destination register
-	r[instruction.f3.RD] = instruction.f3.CONST;
+	r[instr.f3.RD] = instr.f3.CONST;
 }
 
 void VirtualMachine::store(){
 	//Set the contents of destination register to location in memory
 	
 	//check if memory location out of bounds
-	if(instruction.f2.ADDR < base || instruction.f2.ADDR > limit){
+	if(instr.f2.ADDR < base || instr.f2.ADDR > limit){
 		cout << "Address store is out of range" << endl;
 	}
 	//set memory to content of destination register
-	mem[instruction.f2.ADDR] = r[instruction.f2.RD];
+	mem[instr.f2.ADDR] = r[instr.f2.RD];
 	clock += 4;
 }
 
@@ -144,23 +146,23 @@ void VirtualMachine::add(){
 	clock += 1;
 	
 	//check if I bit
-	if (instruction.f1.I == 0){
+	if (instr.f1.I == 0){
 		//temp result
 		int resultSum = 0;
-		resultSum = r[instruction.f1.RD] + r[instruction.f1.RS];
+		resultSum = r[instr.f1.RD] + r[instr.f1.RS];
 		
 		//check overflow for two negative numbers
-		if( r[instruction.f1.RD] < 0 && r[instruction.f1.RS] < 0 && resultSum > 0){
+		if( r[instr.f1.RD] < 0 && r[instr.f1.RS] < 0 && resultSum > 0){
 			//set overflow 
 			sr |= 0b10000;
 		}
 		//if RD, RS positive and result negative 
-		else if(r[instruction.f1.RD] > 0 && r[instruction.f1.RS] > 0 && resultSum < 0){
+		else if(r[instr.f1.RD] > 0 && r[instr.f1.RS] > 0 && resultSum < 0){
 			//set overflow
 			sr |= 0b10000;
 		}
 		//set temp result to destination register
-		r[instruction.f1.RD] = resultSum;
+		r[instr.f1.RD] = resultSum;
 		
 		//check bit if bit 17 is 1
 		setCarry();
@@ -174,20 +176,20 @@ void VirtualMachine::addi(){
 	clock += 1;
 	//temp result
 	int resultSum = 0;
-	resultSum = r[instruction.f3.RD] + instruction.f3.CONST;
+	resultSum = r[instr.f3.RD] + instr.f3.CONST;
 	
 	//if RD, CONST negative and result positive
-	if( r[instruction.f3.RD] < 0 && instruction.f3.CONST < 0 && resultSum > 0){
+	if( r[instr.f3.RD] < 0 && instr.f3.CONST < 0 && resultSum > 0){
 		//set overflow
 		sr |= 0b10000;
 	}
 	//if RD, CONST positive and result negative
-	if(r[instruction.f3.RD > 0 && instruction.f3.CONST > 0 && resultSum < 0 ){
+	if(r[instr.f3.RD] > 0 && instr.f3.CONST > 0 && resultSum < 0 ){
 		//set overflow
 		sr |= 0b10000;
 	}
 	//set destination register to temp result
-	r[instruction.f3.RD] = resultSum;
+	r[instr.f3.RD] = resultSum;
 	setCarry();
 }
 
@@ -195,23 +197,23 @@ void VirtualMachine::addc(){
 	clock += 1;
 	
 	//check I bit
-	if(instruction.f1.I == 0){
+	if(instr.f1.I == 0){
 		//set carry = sr[0]
 		int carry = sr & 0b1;
 		//temp result
 		int resultSum = 0;
-		resultSum = r[instruction.f1.RD] + r[instruction.f1.RS] + carry;
+		resultSum = r[instr.f1.RD] + r[instr.f1.RS] + carry;
 		
 		//check if RD and RS are negative and if result is postive
-		if(r[instruction.f1.RD] < 0 && r[instruction.f1.RS] < 0 && resultSum  > 0){
+		if(r[instr.f1.RD] < 0 && r[instr.f1.RS] < 0 && resultSum  > 0){
 			//set overflow
 			sr |= 0b10000;
 		}
-		else if(r[instruction.f1.RD] > 0= && r[instruction.f1.RS] >= 0 && carry >= 0 && resultSum  < 0){
+		else if(r[instr.f1.RD] >= 0 && r[instr.f1.RS] >= 0 && carry >= 0 && resultSum  < 0){
 			//set for overflow
 			sr |= 0b10000;
 		}
-		r[instruction.f1.RD] = resultSum;
+		r[instr.f1.RD] = resultSum;
 		setCarry();
 	}
 	else{
@@ -225,41 +227,41 @@ void VirtualMachine::addci(){
 	int carry = sr & 0b1;
 	//temp result
 	int resultSum = 0;
-	resultSum = r[instruction.f3.RD] + instruction.f3.CONST + carry;
+	resultSum = r[instr.f3.RD] + instr.f3.CONST + carry;
 	
 	//if result rd is neg and const is neg result is positive set overflow
-	if(r[instruction.f3.RD] < 0 && instruction.f3.CONST < 0 && resultSum > 0){
+	if(r[instr.f3.RD] < 0 && instr.f3.CONST < 0 && resultSum > 0){
 		//set overflow
 		sr |= 0b010000;
 	}
 	//if rd and CONST pos and result is pos then set overflow
-	else if(r[instruction.f3.RD] >= 0 && instruction.f3.CONST >= 0 && resultSum < 0){
+	else if(r[instr.f3.RD] >= 0 && instr.f3.CONST >= 0 && resultSum < 0){
 		sr |= 0b010000;
 	}
 	
-	r[instruction.f3.RD] = resultSum;
+	r[instr.f3.RD] = resultSum;
 	setCarry();
 }
 
 void VirtualMachine::sub(){
 	clock += 1;
 	
-	if(instruction.f1.I == 0){
+	if(instr.f1.I == 0){
 		int resultSub = 0;
-		resultSub = r[instruction.f1.RD] - r[instruction.f1.RS];
+		resultSub = r[instr.f1.RD] - r[instr.f1.RS];
 		
 		//if rd and NOT(rs) are neg and result is pos then set overflow
-		if(r[instruction.f1.RD] < 0 && (~r[instruction.f1.RS] + 1) < 0 && resultSub >= 0){
+		if(r[instr.f1.RD] < 0 && (~r[instr.f1.RS] + 1) < 0 && resultSub >= 0){
 			//set overflow
 			sr |= 0b010000;
 		}
 		//if rd and NOT(rs) are pos and result is neg set overflow
-		else if(r[instruction.f1.RD] >= 0 && (~r[instruction.f1.RS] + 1) >= 0 && resultSub < 0){
+		else if(r[instr.f1.RD] >= 0 && (~r[instr.f1.RS] + 1) >= 0 && resultSub < 0){
 			//set overflow
 			sr |= 0b010000;
 		}
 		
-		r[instruction.f1.RD] = resultSub;
+		r[instr.f1.RD] = resultSub;
 		setCarry();
 	}
 	else{
@@ -270,42 +272,42 @@ void VirtualMachine::sub(){
 void VirtualMachine::subi(){
 	clock += 1;
 	int resultSub = 0;
-	resulltSub = r[instruction.f3.RD] - instruction.f3.CONST;
+	resultSub = r[instr.f3.RD] - instr.f3.CONST;
 	
 	//if rd and NOT(CONST) are neg and result is pos then set overflow
-	if(r[instruction.f3.RD] < 0 && (~instruction.f3.CONST + 1) < 0 && resultSub >= 0){
+	if(r[instr.f3.RD] < 0 && (~instr.f3.CONST + 1) < 0 && resultSub >= 0){
 		//set overflow
 		sr |= 0b010000;
 	}
 	//if rd and NOT(CONST) are postive and result is neg then set overflow
-	else if(r[instruction.f3.RD] >= 0 && (~instruction.f3.CONST + 1) >= 0 && resultSub < 0){
+	else if(r[instr.f3.RD] >= 0 && (~instr.f3.CONST + 1) >= 0 && resultSub < 0){
 		//set overflow
 		sr |= 0b010000;
 	}
 	
-	r[]instruction.f3.RD] = resultSub;
+	r[instr.f3.RD] = resultSub;
 	setCarry();
 }
 
 void VirtualMachine::subc(){
 	clock += 1;
 	
-	if(instruction.f1.I == 0){
+	if(instr.f1.I == 0){
 		int carry = sr & 0b1;
 		int resultSub = 0;
-		resultSub = r[instruction.f1.RD] - r[instruction.f1.RS] - carry;
+		resultSub = r[instr.f1.RD] - r[instr.f1.RS] - carry;
 		
 		//if rd and NOT(rs) are neg and result is pos then set overflow
-		if(r[instruction.f1.RD] < 0 && (~r[instruction.f1.RS] + 1) < 0 && resultSub >= 0){
+		if(r[instr.f1.RD] < 0 && (~r[instr.f1.RS] + 1) < 0 && resultSub >= 0){
 			sr |= 0b010000;
 		}
 		//if rd and NOT(rs) positive and result is neg then set overflow
-		else if(r[instruction.f1.RD] >= 0 && (~r[instruction.f1.RS] + 1) >= 0 && resultSub < 0){
+		else if(r[instr.f1.RD] >= 0 && (~r[instr.f1.RS] + 1) >= 0 && resultSub < 0){
 			sr |= 0b010000;
 		}
 		
-		r[instruction.f1.RD] = resultSub;
-		checkCarry();
+		r[instr.f1.RD] = resultSub;
+		setCarry();
 	}
 	else{
 		subci();
@@ -317,27 +319,27 @@ void VirtualMachine::subci(){
 	
 	int carry = sr & 0b1;
 	int resultSub = 0;
-	resultSub = r[instruction.f3.RD] - instruction.f3.CONST - carry;
+	resultSub = r[instr.f3.RD] - instr.f3.CONST - carry;
 	
 	//if rd and NOT(CONST) neg and result is pos then set overflow
-	if(r[instruction.f3.RD] < 0 && (~instruction.f3.CONST + 1) < 0 && resultSub >= 0){
+	if(r[instr.f3.RD] < 0 && (~instr.f3.CONST + 1) < 0 && resultSub >= 0){
 			sr |= 0b010000;
 	}
 	//if rd and NOT(CONST) pos and result is neg then set overflow 
-	else if(r[instruction.f3.RD] >= 0 && (~instruction.f3.CONST + 1) >= 0 && resultSub < 0){
+	else if(r[instr.f3.RD] >= 0 && (~instr.f3.CONST + 1) >= 0 && resultSub < 0){
 			sr |= 0b010000;
 	}
 	
-	r[instruction.f3.RD] = resultSub;
-	checkCarry();
+	r[instr.f3.RD] = resultSub;
+	setCarry();
 }
 
 void VirtualMachine::and_(){
 	clock += 1;
 	
-	if(instruction.f1.I == 0){
+	if(instr.f1.I == 0){
 		//and rd with rs
-		r[instruction.f1.RD] = r[instruction.f1.RD] & r[instruction.f1.RS];
+		r[instr.f1.RD] = r[instr.f1.RD] & r[instr.f1.RS];
 	}
 	else{
 		andi();
@@ -347,14 +349,14 @@ void VirtualMachine::and_(){
 void VirtualMachine::andi(){
 	clock += 1;
 	//and rd with const
-	r[instruction.f3.RD] = r[instruction.f3.RD] & instruction.f3.CONST;
+	r[instr.f3.RD] = r[instr.f3.RD] & instr.f3.CONST;
 }
 
 void VirtualMachine::xor_(){
 	clock += 1;
-	if(instruction.f1.I == 0){
+	if(instr.f1.I == 0){
 		//xor rd with rs
-		r[instruction.f1.RD] = r[instruction.f1.RD] ^ r[instruction.f2.RS];
+		r[instr.f1.RD] = r[instr.f1.RD] ^ r[instr.f1.RS];
 	}
 	else{
 		xori();
@@ -364,19 +366,19 @@ void VirtualMachine::xor_(){
 void VirtualMachine::xori(){
 	clock += 1;
 	//xor rd with const
-	r[instruction.f3.RD] = r[instruction.f3.RD] ^ instruction.f3.CONST;
+	r[instr.f3.RD] = r[instr.f3.RD] ^ instr.f3.CONST;
 }
 
 void VirtualMachine::compl_(){
 	clock += 1;
 	//take compl of rd 
-	r[instruction.f1.RD] = ~r[instruction.f1.RD];
+	r[instr.f1.RD] = ~r[instr.f1.RD];
 }
 
 void VirtualMachine::shl(){
 	clock += 1;
 	//adds zero to LSB to shift left
-	r[instruction.f1.RD] = r[instruction.f1.RD] << 1;
+	r[instr.f1.RD] = r[instr.f1.RD] << 1;
 	setCarry();
 }
 
@@ -384,15 +386,15 @@ void VirtualMachine::shla(){
 	clock += 1;
 	//check if content in RD is less then zero 
 	//sign extend after shift
-	if(r[instruction.f1.RD] < 0){
+	if(r[instr.f1.RD] < 0){
 		//shift left
-		r[instruction.f1.RD] = r[instruction.f1.RD] << 1;
+		r[instr.f1.RD] = r[instr.f1.RD] << 1;
 		//set signed bit to 1
-		r[instruction.f1.RD] |= 0b10000000000000000000000000000000;
+		r[instr.f1.RD] |= 0b10000000000000000000000000000000;
 	}
 	else{
 		//rd is positive just shift right, no sign extend
-		r[instruction.f1.RD] = r[instruction.f1.RD] << 1;
+		r[instr.f1.RD] = r[instr.f1.RD] << 1;
 	}
 	
 	setCarry();
@@ -402,7 +404,7 @@ void VirtualMachine::shla(){
 void VirtualMachine::shr(){
 	clock += 1;
 	//adds zero to MSB to shift right
-	r[instruction.f1.RD] = r[instruction.f1.RD] >> 1;
+	r[instr.f1.RD] = r[instr.f1.RD] >> 1;
 	setCarry();
 }
 
@@ -411,15 +413,15 @@ void VirtualMachine::shra(){
 	
 	//check if content in RD is less then zero 
 	//sign extend after shift
-	if(r[instruction.f1.RD] < 0){
+	if(r[instr.f1.RD] < 0){
 		//shift left
-		r[instruction.f1.RD] = r[instruction.f1.RD] >> 1;
+		r[instr.f1.RD] = r[instr.f1.RD] >> 1;
 		//set signed bit to 1
-		r[instruction.f1.RD] |= 0b10000000000000000000000000000000;
+		r[instr.f1.RD] |= 0b10000000000000000000000000000000;
 	}
 	else{
 		//rd is positive just shift right, no sign extend
-		r[instruction.f1.RD] = r[instruction.f1.RD] >> 1;
+		r[instr.f1.RD] = r[instr.f1.RD] >> 1;
 	}
 	
 	setCarry();
@@ -427,9 +429,9 @@ void VirtualMachine::shra(){
 
 void VirtualMachine::compr(){
 	clock += 1;
-	if(instruction.f1.I == 0){
+	if(instr.f1.I == 0){
 		//if rd < rs
-		if(r[instruction.f1.RD] < r[instruction.f1.RS]){
+		if(r[instr.f1.RD] < r[instr.f1.RS]){
 			//V L E G C
 			//4 3 2 1 0
 			//reset L E G bits in sr
@@ -439,7 +441,7 @@ void VirtualMachine::compr(){
 		}
 		
 		//if rd == rs
-		else if (r[instruction.f1.RD] == r[instruction.f1.RS]){
+		else if (r[instr.f1.RD] == r[instr.f1.RS]){
 			//reset L E G bits in sr
 			sr &= 0b10001;
 			//set EqualTO bit to 1
@@ -460,7 +462,7 @@ void VirtualMachine::compr(){
 
 void VirtualMachine::compri(){
 	clock += 1;
-	if(r[instruction.f1.RD] < instruction.f3.CONST){
+	if(r[instr.f1.RD] < instr.f3.CONST){
 			//V L E G C
 			//4 3 2 1 0
 			//reset L E G bits in sr
@@ -469,7 +471,7 @@ void VirtualMachine::compri(){
 			sr |= 0b01000; 
 		}
 		//if rd == rs
-	else if (r[instruction.f1.RD] == instruction.f3.CONST){
+	else if (r[instr.f1.RD] == instr.f3.CONST){
 		//clear L E G bits in sr
 		sr &= 0b10001;
 		//set EqualTO bit to 1
@@ -486,29 +488,29 @@ void VirtualMachine::compri(){
 
 void VirtualMachine::getstat(){
 	clock += 1;
-	r[instruction.f1.RD] = sr;
+	r[instr.f1.RD] = sr;
 	
 }
 
 void VirtualMachine::putstat(){
 	clock += 1;
-	sr = r[instruction.f1.RD];
+	sr = r[instr.f1.RD];
 }
 
 void VirtualMachine::jump(){
 	
-	if(instruction.f2.ADDR >= limit || instruction.f2.ADDR < base){
+	if(instr.f2.ADDR >= limit || instr.f2.ADDR < base){
 		cout << "Jump out of range." << endl;
 		exit(2);
 	}
 	else{
 		clock += 1;
-		pc = instruction.f2.ADDR;
+		pc = instr.f2.ADDR;
 	}
 }
 
 void VirtualMachine::jumpl(){
-	if(instruction.f2.ADDR > limit || instruction.f2.ADDR < base){
+	if(instr.f2.ADDR > limit || instr.f2.ADDR < base){
 		cout << "Jumpl out of range." << endl;
 		exit(3);
 	}
@@ -516,13 +518,13 @@ void VirtualMachine::jumpl(){
 		clock += 1;
 		//check less than bit
 		if(sr & 0b1000){
-			pc = instruction.f2.ADDR;
+			pc = instr.f2.ADDR;
 		}
 	}
 }
 
 void VirtualMachine::jumpe(){
-	if(instruction.f2.ADDR > limit || instruction.f2.ADDR < base){
+	if(instr.f2.ADDR > limit || instr.f2.ADDR < base){
 		cout << "Jumpe out of range." << endl;
 		exit(4);
 	}
@@ -530,12 +532,13 @@ void VirtualMachine::jumpe(){
 		clock += 1;
 		//check equal to bit
 		if(sr & 0b100){
-			pc = instruction.f2.ADDR;
+			pc = instr.f2.ADDR;
+		}
 	}
 }
 
 void VirtualMachine::jumpg(){
-	if(instruction.f2.ADDR > limit || instruction.f2.ADDR < base){
+	if(instr.f2.ADDR > limit || instr.f2.ADDR < base){
 		cout << "Jumpg out of range." << endl;
 		exit(5);
 	}
@@ -543,7 +546,7 @@ void VirtualMachine::jumpg(){
 		clock += 1;
 		//check greater than bit
 		if(sr & 0b10){
-			pc = instruction.f2.ADDR;
+			pc = instr.f2.ADDR;
 		}
 	}
 }
@@ -562,7 +565,7 @@ void VirtualMachine::call(){
 	mem[--sp] = r[3];
 	mem[--sp] = pc;
 	
-	pc = instruction.f2.ADDR;
+	pc = instr.f2.ADDR;
 }
 
 void VirtualMachine::return_(){
@@ -579,8 +582,22 @@ void VirtualMachine::return_(){
 void VirtualMachine::read(){
 	clock += 28;
 	
-	fstream inFile;
-	inFile.open(fileName.c_str(), ios::in);
+	/*
+	if (!oFile.is_open()) {
+		cout << oFile << " failed to open." << endl;
+		exit(1);
+	} 
+	string line;
+	getline(oFile, line);
+	int limitSize = 0;
+	int tempOP;	
+	
+	istringstream op( line.c_str() );
+	op >> tempOP;
+	*/
+	
+	fstream oFile;
+	oFile.open(inFile.c_str(), ios::in);
 	
 	if (!inFile.is_open()) {
 		cout << inFile << " failed to open." << endl;
@@ -588,11 +605,13 @@ void VirtualMachine::read(){
 	}
 	
 	string line;
-	getline(inFile, line);
-	inFile.close();
+	int input;
 	
-	int input = stoi(line.c_str());
-	r[instruction.f1.RD] = input;
+	getline(inFile, line);
+	istringstream in(line.c_str());
+	in >> input;
+	infile.close;
+	r[instr.f1.RD] = input;
 }
 
 void VirtualMachine::write(){
@@ -602,7 +621,7 @@ void VirtualMachine::write(){
 	
 	outFile.open(outFile.c_str(), ios::out);
 
-	outFile << r[instruction.f1.RD] << endl;
+	outFile << r[instr.f1.RD] << endl;
 	outFile.close();
 }
 
