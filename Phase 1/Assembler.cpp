@@ -33,7 +33,7 @@ int main(){
 			file.setOpcode(line);
 			file.setDestinationReg(line);
 			file.setImmediate(line);
-			file.setAddress(line);
+			file.setSourceReg(line);
 			//setAddr is called in setImm. and explicitly in exception opcodes
 
 			myOutput << file.getInstruction() << "\n";

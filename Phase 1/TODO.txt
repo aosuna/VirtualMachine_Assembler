@@ -1,7 +1,6 @@
 Assembler:
 1) In switch determine which opcodes set the source reg
 and which set the const/addr
-2) Use NEW keyword to wipe the instruction on each line
 3) Error handling
 
 

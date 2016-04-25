@@ -141,9 +141,11 @@ void Assembler::clearInstruction(){
 void Assembler::setOpcode(std::string instruction){
 	switch(hashit(instruction)){
 		case load: //load & loadi = 00000 so change nothing
+			setAddress(instruction);
 			break;
 		case store: //store = 00001 so change only bit 11
 			test_instruction[11] = 1;
+			setAddress(instruction);
 			break;
 		case add: //add = 00010 so change only bit 12
 			test_instruction[12] = 1;
@@ -206,19 +208,23 @@ void Assembler::setOpcode(std::string instruction){
 			break;			
 		case jump: //jump = 10000 so change only bit 15
 			test_instruction[15] = 1;
+			setAddress(instruction);
 			break;	
 		case jumpl: //jumpl = 10001 so change only bits 15,11
 			test_instruction[15] = 1;
 			test_instruction[11] = 1;
+			setAddress(instruction);
 			break;				
 		case jumpe: //jumpe = 10010 so change only bit 15,12
 			test_instruction[15] = 1;
 			test_instruction[12] = 1;
+			setAddress(instruction);
 			break;		
 		case jumpg: //jumpg = 10011 so change only bit 15,12-11
 			test_instruction[15] = 1;
 			test_instruction[12] = 1;
 			test_instruction[11] = 1;
+			setAddress(instruction);
 			break;	
 		case call: //call = 10100 so change only bit 15,13
 			test_instruction[15] = 1;
@@ -256,6 +262,12 @@ void Assembler::setOpcode(std::string instruction){
 void Assembler::setDestinationReg(std::string instruction){
 	std::size_t position;
 
+	//handle the exceptions that don't set the dest. reg.
+	position = instruction.find("jump");
+	if (position!=std::string::npos){
+		return; //do nothing
+	}
+
 	position = instruction.find(' ');
 	position++; //get next character after first space
 
@@ -277,19 +289,31 @@ void Assembler::setDestinationReg(std::string instruction){
 
 //function to set the Immediate bit: by design, none of the opcodes contain 'i' unless it 
 //is an immediate instruction so simply set bit 8 dependent on whether 'i' is found
-//call set address-->all imm. opcopdes use addr mode with exception of load,store,jump(s),& call
 void Assembler::setImmediate(std::string instruction){
 	std::size_t position;
 
+	//all imm. instr. end w/ the character i with exception of jump(l/e/g),call & store
 	position = instruction.find("i");
 	if (position!=std::string::npos){
 		test_instruction[8] = 1; //if found, set to I to 1
-		//set address
-		//test_instruction = setAddress(instruction, test_instruction);
-		//std::cout << "After setting address function is: " << test_instruction << "\n";
+		setAddress(instruction);
 	} else {
 		test_instruction[8] = 0; //explicity set to 0 to avoid problems.
 	}	
+
+	//set i for exceptions jump(l/e/g) & call
+	position = instruction.find("jump");
+	if (position!=std::string::npos){
+		test_instruction[8] = 1;
+	}
+	position = instruction.find("call");
+	if (position!=std::string::npos){
+		test_instruction[8] = 1;
+	}
+	position = instruction.find("store");
+	if (position!=std::string::npos){
+		test_instruction[8] = 1;
+	}
 }
 
 //set the source register [7:6] which can only be 0,1,2,3
@@ -320,11 +344,18 @@ void Assembler::setSourceReg(std::string instruction){
 void Assembler::setAddress(std::string instruction){
 	std::size_t position;
 
-	position = instruction.rfind(' ');
-	position++; //get next character after first space
+	//handle exception: jump(l/e/g) & call only take one parameter of ADDR
+	position = instruction.find("jump");
+	if (position!=std::string::npos){
+		position = instruction.find(' '); //if jump is found, then get val after first space
+	} else {
+		position = instruction.rfind(' '); //else get val after second space
+	}
+	position++; //get next character after space
 
 	std::string address = instruction.substr(position, instruction.length());
 	std::string::size_type sz;
+	std::cout << "Stoi is about to be called on: " << instruction << ".\n";
 	int iaddress = std::stoi(address,&sz);
 
 	std::cout << "str = " << iaddress <<".\n";
@@ -333,11 +364,9 @@ void Assembler::setAddress(std::string instruction){
 	if (iaddress<0){ //the value is a const, can be neg, set to signed char
 		signed char byte = iaddress;
 		constAddress = intToBinString(byte);
-		std::cout << "The value of constAddress outside of if is: " << constAddress <<".\n";
 	} else { //the value is either an address, set to unsigned char
 		unsigned char byte = iaddress;
 		constAddress = intToBinString(byte);
-		std::cout << "The value of constAddress outside of if is: " << constAddress <<".\n";
 	}
 	//for each of the 8 bits in constant/address loop through and assign to test_instruction
 	for (int i=0; i<=7; i++){
