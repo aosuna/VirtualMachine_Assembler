@@ -1,5 +1,5 @@
-#ifndef VirtualMachine_H
-#define VirtualMachine_H 
+#ifndef VIRTUALMACHINE_H
+#define VIRTUALMACHINE_H 
 #include <iostream>
 #include <fstream>
 #include <ostream>
@@ -7,6 +7,7 @@
 #include <string>
 #include <map>
 #include <sstream>
+#include <cstdlib>
 
 
 using namespace std;
