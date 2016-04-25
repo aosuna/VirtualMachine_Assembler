@@ -149,26 +149,32 @@ void Assembler::setOpcode(std::string instruction){
 			break;
 		case add: //add = 00010 so change only bit 12
 			test_instruction[12] = 1;
+			setSourceReg(instruction);
 			break;	
 		case addc: //add = 00011 so change bits 12-11
 			test_instruction[11] = 1;
 			test_instruction[12] = 1;
+			setSourceReg(instruction);
 			break;			
 		case sub: //sub = 00100 so change only bit 13
 			test_instruction[13] = 1;
+			setSourceReg(instruction);
 			break;	
 		case subc: //subc = 00101 so change only bit 13&11
 			test_instruction[13] = 1;
 			test_instruction[11] = 1;
+			setSourceReg(instruction);
 			break;				
 		case eand: //and = 00110 so change only bit 13&12
 			test_instruction[13] = 1;
 			test_instruction[12] = 1;
+			setSourceReg(instruction);
 			break;			
 		case exor: //xor = 00111 so change only bits 13-11
 			test_instruction[13] = 1;
 			test_instruction[12] = 1;
 			test_instruction[11] = 1;
+			setSourceReg(instruction);
 			break;			
 		case ecompl: //compl = 01000 so change only bit 14
 			test_instruction[14] = 1;
@@ -194,6 +200,7 @@ void Assembler::setOpcode(std::string instruction){
 			test_instruction[14] = 1;
 			test_instruction[13] = 1;
 			test_instruction[11] = 1;
+			setSourceReg(instruction);
 			break;			
 		case getstat: //getstat = 01110 so change only bits 14-12
 			test_instruction[14] = 1;
