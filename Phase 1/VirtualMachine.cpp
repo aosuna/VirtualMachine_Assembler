@@ -90,6 +90,10 @@ void VirtualMachine::run(string fileName){
 		if (this->*OPInstruc[instruction.f1.OP])();
 	}
 	
+	fstream outFile;
+	outFile.open(outFile.c_str(), ios::in | ios::out);
+	outFile << "clock: " << clock << endl;
+	outFile.close();
 	
 }
 
@@ -332,6 +336,7 @@ void VirtualMachine::and_(){
 	clock += 1;
 	
 	if(instruction.f1.I == 0){
+		//and rd with rs
 		r[instruction.f1.RD] = r[instruction.f1.RD] & r[instruction.f1.RS];
 	}
 	else{
@@ -341,13 +346,14 @@ void VirtualMachine::and_(){
 
 void VirtualMachine::andi(){
 	clock += 1;
-	
+	//and rd with const
 	r[instruction.f3.RD] = r[instruction.f3.RD] & instruction.f3.CONST;
 }
 
 void VirtualMachine::xor_(){
 	clock += 1;
 	if(instruction.f1.I == 0){
+		//xor rd with rs
 		r[instruction.f1.RD] = r[instruction.f1.RD] ^ r[instruction.f2.RS];
 	}
 	else{
@@ -357,11 +363,13 @@ void VirtualMachine::xor_(){
 
 void VirtualMachine::xori(){
 	clock += 1;
+	//xor rd with const
 	r[instruction.f3.RD] = r[instruction.f3.RD] ^ instruction.f3.CONST;
 }
 
 void VirtualMachine::compl_(){
 	clock += 1;
+	//take compl of rd 
 	r[instruction.f1.RD] = ~r[instruction.f1.RD];
 }
 
@@ -420,6 +428,7 @@ void VirtualMachine::shra(){
 void VirtualMachine::compr(){
 	clock += 1;
 	if(instruction.f1.I == 0){
+		//if rd < rs
 		if(r[instruction.f1.RD] < r[instruction.f1.RS]){
 			//V L E G C
 			//4 3 2 1 0
@@ -428,15 +437,16 @@ void VirtualMachine::compr(){
 			//set Less bit to 1
 			sr |= 0b01000; 
 		}
+		
 		//if rd == rs
 		else if (r[instruction.f1.RD] == r[instruction.f1.RS]){
-			//clear L E G bits in sr
+			//reset L E G bits in sr
 			sr &= 0b10001;
 			//set EqualTO bit to 1
 			sr |= 0b00100;
 		}
+		//rd is greater than rs
 		else{
-			//rd is greater than rs
 			//reset L E G bits in rs
 			sr &= 0b10001;
 			//set greater than bit to 1
@@ -446,7 +456,6 @@ void VirtualMachine::compr(){
 	else{
 		compri();
 	}
-	
 }
 
 void VirtualMachine::compri(){
@@ -588,6 +597,13 @@ void VirtualMachine::read(){
 
 void VirtualMachine::write(){
 	clock += 28;
+	
+	fstream outFile;
+	
+	outFile.open(outFile.c_str(), ios::out);
+
+	outFile << r[instruction.f1.RD] << endl;
+	outFile.close();
 }
 
 void VirtualMachine::halt(){

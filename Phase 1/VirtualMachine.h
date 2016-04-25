@@ -58,6 +58,7 @@ class VirtualMachine{
                int clock;	//clock counter
                int base; 	//base register
                int limit;	//limit register size of the instructions
+			   string oFile; // read o file from assembler
                string inFile; //reads in file
                string outFile;	//output a file
 			   map<int, FP> OPInstruc; //map instructions to function
