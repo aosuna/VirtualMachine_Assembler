@@ -582,20 +582,6 @@ void VirtualMachine::return_(){
 void VirtualMachine::read(){
 	clock += 28;
 	
-	/*
-	if (!oFile.is_open()) {
-		cout << oFile << " failed to open." << endl;
-		exit(1);
-	} 
-	string line;
-	getline(oFile, line);
-	int limitSize = 0;
-	int tempOP;	
-	
-	istringstream op( line.c_str() );
-	op >> tempOP;
-	*/
-	
 	fstream oFile;
 	oFile.open(inFile.c_str(), ios::in);
 	
