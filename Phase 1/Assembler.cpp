@@ -8,12 +8,7 @@
 #include <iostream>
 #include <fstream>
 
-int main(){
-		//get user input to the assembly file
-	std::cout << "Input the file you wish to load: ";
-	std::string inFileName;
-	std::cin >> inFileName;
-
+void Assembler::compile(std::string inFileName){
 	//create a string that will be the output file name
 	std::string outFileName = inFileName.substr(0,inFileName.length()-2);
 	outFileName = outFileName + ".o";
@@ -45,6 +40,4 @@ int main(){
 	//good manners: close the file stream
 	myAssembly.close();
 	myOutput.close();
-
-	return 0;
 }
