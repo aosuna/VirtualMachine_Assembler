@@ -647,13 +647,3 @@ void VirtualMachine::halt(){
 void VirtualMachine::noop(){
 	clock += 1;
 }
-
-int main(){
-	VirtualMachine vm;
-	string fileName;
-	cout << "Enter file name: ";
-	cin >> fileName;
-	vm.run(fileName);
-	
-	return 0;
-}
