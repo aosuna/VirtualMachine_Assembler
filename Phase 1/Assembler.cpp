@@ -48,7 +48,7 @@ int main (){
 	Assembler as;
 	std::string inputFileName;
 
-	std::cout << "Enter the file you wish to compile.";
+	std::cout << "Enter the file you wish to compile: ";
 	std::cin >> inputFileName;
 
 	as.compile(inputFileName);
