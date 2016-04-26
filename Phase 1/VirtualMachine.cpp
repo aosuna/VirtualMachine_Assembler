@@ -58,44 +58,63 @@ void VirtualMachine::run(string fileName){
 	pc = 0;		//program counter
     ir = 0;		//instruction register
     sr = 0;		//status register
-	sp = 256;		//stack pointer
+	sp = 256;	//stack pointer
     clock = 0;	//clock counter
     base = 0; 	//base register 
     limit = 0;	//limit register
 	
-	fstream oFile;
-	oFile.open(fileName.c_str(), ios::in);
+	//cout << "Enter file name for VM to compile: "
+	fileName = fileName + ".o";
+	//cout << "File sent to VM run() " << fileName << endl;
+	ifstream oFile ( fileName.c_str() );
 	
-	if (!oFile.is_open()) {
+	if ( oFile.is_open() ){
+		string line;
+		int limitSize = 0;
+		int tempOP;
+		
+		while (!oFile.eof()) {
+			//get line convert from string to int and store in memory location
+			getline(oFile, line);
+			//convert string to int by using stringstream and pass value to tempOP
+			stringstream op(line);
+			op >> tempOP;
+			//load file line into memory
+			mem[limitSize] = tempOP;
+			//increase to next memory location
+			limitSize++;
+
+		}
+		oFile.close();
+		//set size of limit to the total size of the program
+		limit = limitSize;
+		while(pc <= limit){
+			//look at each instruction in memory
+			ir = mem[pc];
+			//increase program counter
+			pc++;
+			//set the Int value of instruction to the instruction register
+			instr.i = ir;
+			//compare IR to Opcode 
+			(this->*OPInstruc[instr.f1.OP])();
+		}
+	} 
+	else{
 		cout << oFile << " failed to open." << endl;
 		exit(1);
-	} 
-	string line;
-	getline(oFile, line);
-	int limitSize = 0;
-	int tempOP;
-	while (!oFile.eof()) {
-	//get line convert from string to int and store in memory location
-		istringstream op(line.c_str());
-		op >> tempOP;
-		mem[limitSize++] = tempOP;
-		getline(oFile, line);
-	}
-	//set size of limit to the total size of the program
-	limit = limitSize;
-	while(pc <= limit){
-		//look at each instruction in memory
-		ir = mem[pc++];
-		//set the Int value of instruction to the instruction register
-		instr.i = ir;
-		//compare IR to Opcode 
-		(this->*OPInstruc[instr.f1.OP])();
 	}
 	
-	fstream outFile;
-	outFile.open(fileName.c_str(), ios::out);
-	outFile << "clock: " << clock << endl;
-	outFile.close();
+	//print clock
+	//out used for printing clock under same fileName
+	string out = "o.out";
+	ofstream outFile (out.c_str());
+	if(outFile.is_open()){
+		outFile << "clock: " << clock << endl;
+		outFile.close();
+	}
+	else{
+		cout << outFile << " failed to open." << endl;
+	}
 	
 }
 
@@ -386,19 +405,17 @@ void VirtualMachine::shla(){
 	clock += 1;
 	//check if content in RD is less then zero 
 	//sign extend after shift
-	if(r[instr.f1.RD] < 0){
+	if(r[instr.f1.RD] & 0b1000000000000000){
 		//shift left
 		r[instr.f1.RD] = r[instr.f1.RD] << 1;
+		setCarry();
 		//set signed bit to 1
-		r[instr.f1.RD] |= 0b10000000000000000000000000000000;
+		r[instr.f1.RD] |= 0b1000000000000000;
 	}
 	else{
 		//rd is positive just shift right, no sign extend
 		r[instr.f1.RD] = r[instr.f1.RD] << 1;
 	}
-	
-	setCarry();
-	
 }
 
 void VirtualMachine::shr(){
@@ -413,18 +430,19 @@ void VirtualMachine::shra(){
 	
 	//check if content in RD is less then zero 
 	//sign extend after shift
-	if(r[instr.f1.RD] < 0){
+	if(r[instr.f1.RD] & 0b1){
+		setCarry();
+	}
+	if(r[instr.f1.RD] & 0b1000000000000000){
 		//shift left
 		r[instr.f1.RD] = r[instr.f1.RD] >> 1;
 		//set signed bit to 1
-		r[instr.f1.RD] |= 0b10000000000000000000000000000000;
+		r[instr.f1.RD] |= 0b1000000000000000;
 	}
 	else{
 		//rd is positive just shift right, no sign extend
 		r[instr.f1.RD] = r[instr.f1.RD] >> 1;
 	}
-	
-	setCarry();
 }
 
 void VirtualMachine::compr(){
@@ -581,31 +599,41 @@ void VirtualMachine::return_(){
 
 void VirtualMachine::read(){
 	clock += 28;
+	cout << "please enter file name: ";
+	cin >> inFile;
+	//ifstream oFile ( fileName.c_str() );
+	inFile = inFile + ".in";
+	ifstream oFile(inFile.c_str());
+	//oFile.open();
 	
-	fstream oFile;
-	oFile.open(inFile.c_str(), ios::in);
+	if (oFile.is_open()) {
+		string line;
+		int input;
 	
-	if (!oFile.is_open()) {
+		getline(oFile, line);
+		istringstream in(line.c_str());
+		in >> input;
+		r[instr.f1.RD] = input;
+		oFile.close();
+	}
+	else{
 		cout << oFile << " failed to open." << endl;
 		exit(7);
 	}
-	
-	string line;
-	int input;
-	
-	getline(oFile, line);
-	istringstream in(line.c_str());
-	in >> input;
-	oFile.close();
-	r[instr.f1.RD] = input;
 }
 
 void VirtualMachine::write(){
 	clock += 28;
 	
-	fstream outFile;
+	ofstream outFile;
+	string out;
+
+	cout << "Enter file to to print to: ";
+	cin >> out;
 	
-	outFile.open(inFile.c_str(), ios::out);
+	out = out + ".out";
+	
+	outFile.open( out.c_str() );
 
 	outFile << r[instr.f1.RD] << endl;
 	outFile.close();
@@ -618,4 +646,14 @@ void VirtualMachine::halt(){
 
 void VirtualMachine::noop(){
 	clock += 1;
+}
+
+int main(){
+	VirtualMachine vm;
+	string fileName;
+	cout << "Enter file name: ";
+	cin >> fileName;
+	vm.run(fileName);
+	
+	return 0;
 }

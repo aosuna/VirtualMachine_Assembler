@@ -2,7 +2,6 @@
 #define VIRTUALMACHINE_H 
 #include <iostream>
 #include <fstream>
-#include <ostream>
 #include <vector>
 #include <string>
 #include <map>
@@ -61,7 +60,7 @@ class VirtualMachine{
                int base; 	//base register
                int limit;	//limit register size of the instructions
 			   string oFile; // read o file from assembler
-               string inFile; //reads in file
+               string inFile; //reads a .in file for read()
                string outFile;	//output a file
 			   map<int, FP> OPInstruc; //map instructions to function
 
