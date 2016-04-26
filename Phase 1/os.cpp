@@ -1,18 +1,22 @@
 #include "Assembler.h"
 #include "VirtualMachine.h"
 
+using namespace std;
+
 int main (int argc, char *argv[]){
-	//Assembler as;
+	Assembler as;
 	VirtualMachine vm;
 
-	/*std::string fileName;
+	string fileName;
+	string oFileName;
 	cout << "Enter file name: ";
 	cin >> fileName;
-
-	std::string objectFile;
-	objectFile = as.compile(fileName); */
-
-	vm.run("fact.o");
+	
+	as.compile(fileName);
+	
+	fileName.pop_back()
+	oFileName = fileName + "o";
+	vm.run(fileName);
 
 	return 0;
 }
