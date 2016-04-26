@@ -34,7 +34,7 @@ public:
 
 	//data access functions
 	std::bitset<16> getInstruction();
-	void compile(std::string inFileName);
+	std::string compile(std::string inFileName);
 
 private:
 	std::bitset<16> test_instruction;

@@ -8,7 +8,7 @@
 #include <iostream>
 #include <fstream>
 
-void Assembler::compile(std::string inFileName){
+std::string Assembler::compile(std::string inFileName){
 	//create a string that will be the output file name
 	std::string outFileName = inFileName.substr(0,inFileName.length()-2);
 	outFileName = outFileName + ".o";
@@ -40,4 +40,18 @@ void Assembler::compile(std::string inFileName){
 	//good manners: close the file stream
 	myAssembly.close();
 	myOutput.close();
+
+	return outFileName;
+}
+
+int main (){
+	Assembler as;
+	std::string inputFileName;
+
+	std::cout << "Enter the file you wish to compile.";
+	std::cin >> inputFileName;
+
+	as.compile(inputFileName);
+
+	return 0;
 }
