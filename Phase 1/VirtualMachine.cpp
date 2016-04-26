@@ -397,8 +397,16 @@ void VirtualMachine::compl_(){
 void VirtualMachine::shl(){
 	clock += 1;
 	//adds zero to LSB to shift left
-	r[instr.f1.RD] = r[instr.f1.RD] << 1;
-	setCarry();
+	//if MSB has 1 shift left then set carry
+	if(r[instr.f1.RD] & 0b1000000000000000){
+		r[instr.f1.RD] = r[instr.f1.RD] << 1;
+		setCarry();	
+	}
+	else{
+		//if MSB has 0 then shift left, no carry
+		r[instr.f1.RD] = r[instr.f1.RD] << 1;
+	}
+	
 }
 
 void VirtualMachine::shla(){
@@ -421,8 +429,15 @@ void VirtualMachine::shla(){
 void VirtualMachine::shr(){
 	clock += 1;
 	//adds zero to MSB to shift right
-	r[instr.f1.RD] = r[instr.f1.RD] >> 1;
-	setCarry();
+	//if LSB is 1 and shift right then add carry
+	if(r[instr.f1.RD] & 0b1){
+		r[instr.f1.RD] = r[instr.f1.RD] >> 1;
+		setCarry();
+	}
+	else{
+		//if ISB is not 1 then shift right no carry
+		r[instr.f1.RD] = r[instr.f1.RD] >> 1;
+	}
 }
 
 void VirtualMachine::shra(){
