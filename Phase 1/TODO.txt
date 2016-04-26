@@ -4,7 +4,5 @@ Assembler:
 
 
 Virtual Machine:
-1)Output file for Run Command, display results or .o file
-2)Function that need to be completed: write()
-3)Comment code for clarity
-4)test functions
+2)Comment code for clarity
+4)test output values for by passing files
