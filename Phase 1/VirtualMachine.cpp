@@ -224,7 +224,7 @@ void VirtualMachine::addi(){
 		sr |= 0b1;
 	}
 	else{
-		sr &= 0b11111110;
+		sr &= 0b11110;
 	}
 	
 	//if negative sign extend
@@ -260,10 +260,10 @@ void VirtualMachine::addc(){
 			sr |= 0b1;
 		}
 		else{
-			sr &= 0b11111110;
+			sr &= 0b11110;
 		}
 		//if negative sign extend
-		if( r[instr.f1.RD] & 0b10000000 ){
+		if( r[instr.f1.RD] & 0b10000000000000000 ){
 			r[instr.f1.RD] = r[instr.f1.RD] | 0b11111111000000000000000000000000;
 		}
 	}
@@ -331,8 +331,8 @@ void VirtualMachine::sub(){
 		}
 		
 		//if negative sign extend
-		if( r[instr.f1.RD] & 0b1000000000000000 ){
-			r[instr.f1.RD] = r[instr.f1.RD] | 0b11111111000000000000000000000000;
+		if( r[instr.f1.RD] & 0b10000000000000000 ){
+			r[instr.f1.RD] = r[instr.f1.RD] | 0b11111111111111110000000000000000;
 		}
 	}
 	else{
@@ -367,7 +367,7 @@ void VirtualMachine::subi(){
 		}
 	//if value is negative, sign extend 
 	if( r[instr.f3.RD] & 0b1000000000000000 ){
-		r[instr.f3.RD] = r[instr.f3.RD] | 0b11111111000000000000000000000000;
+		r[instr.f3.RD] = r[instr.f3.RD] | 0b11111111111111110000000000000000;
 	}
 }
 
@@ -432,7 +432,7 @@ void VirtualMachine::subci(){
 		}
 		//if value is negative sign extend
 		if( r[instr.f3.RD] & 128 ){
-			r[instr.f3.RD] = r[instr.f3.RD] | 0b11111111000000000000000000000000;
+			r[instr.f3.RD] = r[instr.f3.RD] | 0b11111111111111110000000000000000;
 		}
 }
 
@@ -521,7 +521,7 @@ void VirtualMachine::shr(){
 	}
 	if(r[instr.f1.RD] & 0b10000000000000000){
 			//value is negative then set sign extend
-			r[instr.f1.RD] = r[instr.f1.RD] | 0b11111111111111111111111100000000;
+			r[instr.f1.RD] = r[instr.f1.RD] | 0b11111111111111110000000000000000;
 			r[instr.f1.RD] = r[instr.f1.RD] >> 1;
 		}
 	else{
@@ -541,7 +541,7 @@ void VirtualMachine::shra(){
 	}
 	if(r[instr.f1.RD] & 0b10000000000000000){
 			//value is negative then set sign extend
-			r[instr.f1.RD] = r[instr.f1.RD] | 0b11111111111111111111111100000000;
+			r[instr.f1.RD] = r[instr.f1.RD] | 0b11111111111111110000000000000000;
 			r[instr.f1.RD] = r[instr.f1.RD] >> 1;
 	}
 	else{
@@ -754,17 +754,4 @@ void VirtualMachine::halt(){
 
 void VirtualMachine::noop(){
 	clock += 1;
-}
-
-/*int main(){
-	
-	string fileName;
-	
-	VirtualMachine vm;
-	cout << "Enter file name: ";
-	cin >> fileName;
-	
-	vm.run(fileName);
-	
-	return 0;
-}*/
+}
