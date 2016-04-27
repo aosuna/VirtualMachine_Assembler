@@ -613,7 +613,7 @@ void VirtualMachine::return_(){
 
 void VirtualMachine::read(){
 	clock += 28;
-	cout << "please enter file name: ";
+	cout << "please enter file name to read in (.in) leave extension out: ";
 	cin >> inFile;
 	//ifstream oFile ( fileName.c_str() );
 	inFile = inFile + ".in";
@@ -642,7 +642,7 @@ void VirtualMachine::write(){
 	ofstream outFile;
 	string out;
 
-	cout << "Enter file to to print to: ";
+	cout << "Enter file name to print to (.out) leave extension out: ";
 	cin >> out;
 	
 	out = out + ".out";
@@ -660,4 +660,15 @@ void VirtualMachine::halt(){
 
 void VirtualMachine::noop(){
 	clock += 1;
+}
+
+int main(){
+	
+	string fileName;
+	
+	VirtualMachine vm;
+	cout << "Enter file name: ";
+	cin >> fileName;
+	
+	vm.run(fileName);
 }
