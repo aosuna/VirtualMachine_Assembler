@@ -8,7 +8,6 @@
 #include <sstream>
 #include <cstdlib>
 
-
 using namespace std;
 
 class format1 {
@@ -69,7 +68,7 @@ class VirtualMachine{
 				void run(string fileName);
 				
 				//status register operations
-				void setCarry();
+				void writeClock();
  
             	//assembly functions
             	void load();	//r[RD] = mem[ADDR]
@@ -105,8 +104,7 @@ class VirtualMachine{
                 void read();	//read new content of r[RD] from .in file
                 void write();	//write r[RD] into .out file
                 void halt();	//halt execution
-                void noop();	//no operation
-				
+                void noop();	//no operation	
 };
 
 #endif

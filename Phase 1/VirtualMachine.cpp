@@ -33,25 +33,29 @@ VirtualMachine::VirtualMachine(){
         OPInstruc[25] = &VirtualMachine::noop;		
 }
 
-void VirtualMachine::setCarry(){
-	int checkCarry = 0;
-	
-	checkCarry = r[instr.f1.RD] & 0b10000000000000000;
-	checkCarry = checkCarry >> 16;
-	
-	//check carry bit in sr first
-	if(sr & 0b1){
-		//if sr[carry] is 1 then set to 0
-		if(checkCarry == 1){
-		sr &= 0b11110;
-		}
+void VirtualMachine::writeClock(){
+	//print clock
+	//out used for printing clock under same fileName
+	string out = "o.out";
+	ofstream outFile (out.c_str());
+	if(outFile.is_open()){
+		outFile << "clock: " << clock << endl;
+		outFile.close();
 	}
 	else{
-		if(checkCarry == 1)
-		//if sr[carry] is 0 then add 1
-		sr &= 0b11111;
+		cout << out << " failed to open." << endl;
 	}
 }
+
+/*void VirtualMachine::setCarry(){
+	//check if bit 9 is 1 set carry
+	if([instr.f1.RD] & 0b100000000){
+		sr = sr | 0b1;
+	}
+	else{
+		sr &= 0b01111111;
+	}
+}*/
 
 void VirtualMachine::run(string fileName){
 	
@@ -64,7 +68,8 @@ void VirtualMachine::run(string fileName){
     limit = 0;	//limit register
 	
 	//cout << "Enter file name for VM to compile: "
-	cout << "File sent to VM run() " << fileName << endl;
+	fileName = fileName + ".o";
+	//cout << "File sent to VM run() " << fileName << endl;
 	ifstream oFile ( fileName.c_str() );
 	
 	if ( oFile.is_open() ){
@@ -99,20 +104,8 @@ void VirtualMachine::run(string fileName){
 		}
 	} 
 	else{
-		cout << oFile << " failed to open." << endl;
+		cout << fileName << " failed to open." << endl;
 		exit(1);
-	}
-	
-	//print clock
-	//out used for printing clock under same fileName
-	string out = "o.out";
-	ofstream outFile (out.c_str());
-	if(outFile.is_open()){
-		outFile << "clock: " << clock << endl;
-		outFile.close();
-	}
-	else{
-		cout << outFile << " failed to open." << endl;
 	}
 	
 }
@@ -138,26 +131,33 @@ void VirtualMachine::load(){
 	else{
 		loadi();
 	}
-	
 }
 
 void VirtualMachine::loadi(){
 	//load CONST to the destination register
 	clock += 1;
 	//load a constant in the destination register
-	r[instr.f3.RD] = instr.f3.CONST;
+	
+	r[instr.f3.RD] = (instr.f3.CONST) & 0b1111111111111111;
+	//if negative sign extend
+		if( r[instr.f3.RD] & 0b10000000000000000 ){
+			r[instr.f3.RD] = r[instr.f3.RD] | 0b11111111000000000000000000000000;
+														 	
+		}
 }
 
 void VirtualMachine::store(){
 	//Set the contents of destination register to location in memory
-	
 	//check if memory location out of bounds
 	if(instr.f2.ADDR < base || instr.f2.ADDR > limit){
 		cout << "Address store is out of range" << endl;
+		exit(1);
 	}
+	else{
 	//set memory to content of destination register
-	mem[instr.f2.ADDR] = r[instr.f2.RD];
-	clock += 4;
+	mem[instr.f2.ADDR] = r[instr.f1.RD];
+	}
+	clock += 4;	
 }
 
 void VirtualMachine::add(){
@@ -167,7 +167,7 @@ void VirtualMachine::add(){
 	if (instr.f1.I == 0){
 		//temp result
 		int resultSum = 0;
-		resultSum = r[instr.f1.RD] + r[instr.f1.RS];
+		resultSum = (r[instr.f1.RD] + r[instr.f1.RS]) & 0b1111111111111111;
 		
 		//check overflow for two negative numbers
 		if( r[instr.f1.RD] < 0 && r[instr.f1.RS] < 0 && resultSum > 0){
@@ -182,8 +182,18 @@ void VirtualMachine::add(){
 		//set temp result to destination register
 		r[instr.f1.RD] = resultSum;
 		
-		//check bit if bit 17 is 1
-		setCarry();
+		//check for carry
+		if(r[instr.f1.RD] & 0b10000000000000000){
+			sr |= 0b1;
+		}
+		else{
+			sr &= 0b0;
+		}
+
+		//check if value is negative for, mask value to have all 1's and out put negative
+		if(r[instr.f1.RD] & 0b10000000){
+			r[instr.f1.RD] = r[instr.f1.RD] | 0b11111111111111111111111100000000;
+		}
 	}
 	else{
 		addi();
@@ -194,7 +204,7 @@ void VirtualMachine::addi(){
 	clock += 1;
 	//temp result
 	int resultSum = 0;
-	resultSum = r[instr.f3.RD] + instr.f3.CONST;
+	resultSum = (r[instr.f3.RD] + instr.f3.CONST) & 0b1111111111111111;
 	
 	//if RD, CONST negative and result positive
 	if( r[instr.f3.RD] < 0 && instr.f3.CONST < 0 && resultSum > 0){
@@ -208,7 +218,19 @@ void VirtualMachine::addi(){
 	}
 	//set destination register to temp result
 	r[instr.f3.RD] = resultSum;
-	setCarry();
+	
+	//set carry
+	if(r[instr.f3.RD] & 0b10000000000000000){
+		sr |= 0b1;
+	}
+	else{
+		sr &= 0b11111110;
+	}
+	
+	//if negative sign extend
+	if( r[instr.f3.RD] & 0b1000000000000000 ){
+		r[instr.f3.RD] = r[instr.f3.RD] | 0b11111111000000000000000000000000;
+	}
 }
 
 void VirtualMachine::addc(){
@@ -220,7 +242,7 @@ void VirtualMachine::addc(){
 		int carry = sr & 0b1;
 		//temp result
 		int resultSum = 0;
-		resultSum = r[instr.f1.RD] + r[instr.f1.RS] + carry;
+		resultSum = (r[instr.f1.RD] + r[instr.f1.RS] + carry) & 0b1111111111111111;
 		
 		//check if RD and RS are negative and if result is postive
 		if(r[instr.f1.RD] < 0 && r[instr.f1.RS] < 0 && resultSum  > 0){
@@ -232,7 +254,18 @@ void VirtualMachine::addc(){
 			sr |= 0b10000;
 		}
 		r[instr.f1.RD] = resultSum;
-		setCarry();
+		
+		//set carry
+		if(r[instr.f1.RD] & 0b10000000000000000){
+			sr |= 0b1;
+		}
+		else{
+			sr &= 0b11111110;
+		}
+		//if negative sign extend
+		if( r[instr.f1.RD] & 0b10000000 ){
+			r[instr.f1.RD] = r[instr.f1.RD] | 0b11111111000000000000000000000000;
+		}
 	}
 	else{
 		addci();
@@ -245,7 +278,7 @@ void VirtualMachine::addci(){
 	int carry = sr & 0b1;
 	//temp result
 	int resultSum = 0;
-	resultSum = r[instr.f3.RD] + instr.f3.CONST + carry;
+	resultSum = (r[instr.f3.RD] + instr.f3.CONST + carry) & 0b11111111;
 	
 	//if result rd is neg and const is neg result is positive set overflow
 	if(r[instr.f3.RD] < 0 && instr.f3.CONST < 0 && resultSum > 0){
@@ -258,7 +291,15 @@ void VirtualMachine::addci(){
 	}
 	
 	r[instr.f3.RD] = resultSum;
-	setCarry();
+	
+	//set carry
+	if(r[instr.f3.RD] & 0b10000000000000000){
+		sr |= 0b1;
+	}
+	else{
+		sr &= 0b11111110;
+	}
+	
 }
 
 void VirtualMachine::sub(){
@@ -266,7 +307,7 @@ void VirtualMachine::sub(){
 	
 	if(instr.f1.I == 0){
 		int resultSub = 0;
-		resultSub = r[instr.f1.RD] - r[instr.f1.RS];
+		resultSub = (r[instr.f1.RD] - r[instr.f1.RS]) & 0b1111111111111111;
 		
 		//if rd and NOT(rs) are neg and result is pos then set overflow
 		if(r[instr.f1.RD] < 0 && (~r[instr.f1.RS] + 1) < 0 && resultSub >= 0){
@@ -280,7 +321,19 @@ void VirtualMachine::sub(){
 		}
 		
 		r[instr.f1.RD] = resultSub;
-		setCarry();
+		
+		//set carry
+		if(r[instr.f1.RD] & 0b10000000000000000){
+			sr |= 0b1;
+		}
+		else{
+			sr &= 0b11111110;
+		}
+		
+		//if negative sign extend
+		if( r[instr.f1.RD] & 0b1000000000000000 ){
+			r[instr.f1.RD] = r[instr.f1.RD] | 0b11111111000000000000000000000000;
+		}
 	}
 	else{
 		subi();
@@ -290,7 +343,7 @@ void VirtualMachine::sub(){
 void VirtualMachine::subi(){
 	clock += 1;
 	int resultSub = 0;
-	resultSub = r[instr.f3.RD] - instr.f3.CONST;
+	resultSub = (r[instr.f3.RD] - instr.f3.CONST) & 0b1111111111111111;
 	
 	//if rd and NOT(CONST) are neg and result is pos then set overflow
 	if(r[instr.f3.RD] < 0 && (~instr.f3.CONST + 1) < 0 && resultSub >= 0){
@@ -304,7 +357,18 @@ void VirtualMachine::subi(){
 	}
 	
 	r[instr.f3.RD] = resultSub;
-	setCarry();
+	
+	//set carry
+	if(r[instr.f3.RD] & 0b10000000000000000){
+			sr |= 0b1;
+		}
+		else{
+			sr &= 0b0;
+		}
+	//if value is negative, sign extend 
+	if( r[instr.f3.RD] & 0b1000000000000000 ){
+		r[instr.f3.RD] = r[instr.f3.RD] | 0b11111111000000000000000000000000;
+	}
 }
 
 void VirtualMachine::subc(){
@@ -313,7 +377,7 @@ void VirtualMachine::subc(){
 	if(instr.f1.I == 0){
 		int carry = sr & 0b1;
 		int resultSub = 0;
-		resultSub = r[instr.f1.RD] - r[instr.f1.RS] - carry;
+		resultSub = (r[instr.f1.RD] - r[instr.f1.RS] - carry) & 0b1111111111111111;
 		
 		//if rd and NOT(rs) are neg and result is pos then set overflow
 		if(r[instr.f1.RD] < 0 && (~r[instr.f1.RS] + 1) < 0 && resultSub >= 0){
@@ -325,7 +389,17 @@ void VirtualMachine::subc(){
 		}
 		
 		r[instr.f1.RD] = resultSub;
-		setCarry();
+		//set carry
+		if(r[instr.f1.RD] & 0b10000000000000000){
+			sr |= 0b1;
+		}
+		else{
+			sr &= 0b0;
+		}
+		//if value is negative sign extend
+		if( r[instr.f3.RD] & 0b1000000000000000 ){
+			r[instr.f3.RD] = r[instr.f3.RD] | 0b11111111000000000000000000000000;
+		}
 	}
 	else{
 		subci();
@@ -349,7 +423,17 @@ void VirtualMachine::subci(){
 	}
 	
 	r[instr.f3.RD] = resultSub;
-	setCarry();
+	//set carry
+		if(r[instr.f1.RD] & 0b10000000000000000){
+			sr |= 0b1;
+		}
+		else{
+			sr &= 0b0;
+		}
+		//if value is negative sign extend
+		if( r[instr.f3.RD] & 128 ){
+			r[instr.f3.RD] = r[instr.f3.RD] | 0b11111111000000000000000000000000;
+		}
 }
 
 void VirtualMachine::and_(){
@@ -397,29 +481,30 @@ void VirtualMachine::shl(){
 	clock += 1;
 	//adds zero to LSB to shift left
 	//if MSB has 1 shift left then set carry
-	if(r[instr.f1.RD] & 0b1000000000000000){
+	if(r[instr.f1.RD] & 0b10000000000000000){
+		sr = sr | 0b1;
 		r[instr.f1.RD] = r[instr.f1.RD] << 1;
-		setCarry();	
 	}
 	else{
 		//if MSB has 0 then shift left, no carry
 		r[instr.f1.RD] = r[instr.f1.RD] << 1;
 	}
-	
 }
 
 void VirtualMachine::shla(){
 	clock += 1;
 	//check if content in RD is less then zero 
 	//sign extend after shift
-	if(r[instr.f1.RD] & 0b1000000000000000){
+	if(r[instr.f1.RD] & 0b10000000000000000){
+		//set carry
+		sr = sr | 0b1;
 		//shift left
 		r[instr.f1.RD] = r[instr.f1.RD] << 1;
-		setCarry();
 		//set signed bit to 1
 		r[instr.f1.RD] |= 0b1000000000000000;
 	}
 	else{
+	
 		//rd is positive just shift right, no sign extend
 		r[instr.f1.RD] = r[instr.f1.RD] << 1;
 	}
@@ -429,12 +514,18 @@ void VirtualMachine::shr(){
 	clock += 1;
 	//adds zero to MSB to shift right
 	//if LSB is 1 and shift right then add carry
+		
 	if(r[instr.f1.RD] & 0b1){
-		r[instr.f1.RD] = r[instr.f1.RD] >> 1;
-		setCarry();
+		//set Carry Right
+		sr = sr | 0b1;
 	}
+	if(r[instr.f1.RD] & 0b10000000000000000){
+			//value is negative then set sign extend
+			r[instr.f1.RD] = r[instr.f1.RD] | 0b11111111111111111111111100000000;
+			r[instr.f1.RD] = r[instr.f1.RD] >> 1;
+		}
 	else{
-		//if ISB is not 1 then shift right no carry
+		//if LSB is not 1 then shift right no carry
 		r[instr.f1.RD] = r[instr.f1.RD] >> 1;
 	}
 }
@@ -445,13 +536,13 @@ void VirtualMachine::shra(){
 	//check if content in RD is less then zero 
 	//sign extend after shift
 	if(r[instr.f1.RD] & 0b1){
-		setCarry();
+		//set Carry right
+		sr = sr | 0b1;
 	}
-	if(r[instr.f1.RD] & 0b1000000000000000){
-		//shift left
-		r[instr.f1.RD] = r[instr.f1.RD] >> 1;
-		//set signed bit to 1
-		r[instr.f1.RD] |= 0b1000000000000000;
+	if(r[instr.f1.RD] & 0b10000000000000000){
+			//value is negative then set sign extend
+			r[instr.f1.RD] = r[instr.f1.RD] | 0b11111111111111111111111100000000;
+			r[instr.f1.RD] = r[instr.f1.RD] >> 1;
 	}
 	else{
 		//rd is positive just shift right, no sign extend
@@ -465,7 +556,7 @@ void VirtualMachine::compr(){
 		//if rd < rs
 		if(r[instr.f1.RD] < r[instr.f1.RS]){
 			//V L E G C
-			//4 3 2 1 0
+		   //16 8 4 2 0
 			//reset L E G bits in sr
 			sr &= 0b10001;
 			//set Less bit to 1
@@ -490,10 +581,12 @@ void VirtualMachine::compr(){
 	else{
 		compri();
 	}
+	
 }
 
 void VirtualMachine::compri(){
 	clock += 1;
+	//sr &= 0b10001;
 	if(r[instr.f1.RD] < instr.f3.CONST){
 			//V L E G C
 			//4 3 2 1 0
@@ -505,7 +598,7 @@ void VirtualMachine::compri(){
 		//if rd == rs
 	else if (r[instr.f1.RD] == instr.f3.CONST){
 		//clear L E G bits in sr
-		sr &= 0b10001;
+		//sr &= 0b10001;
 		//set EqualTO bit to 1
 		sr |= 0b00100;
 	}
@@ -520,8 +613,7 @@ void VirtualMachine::compri(){
 
 void VirtualMachine::getstat(){
 	clock += 1;
-	r[instr.f1.RD] = sr;
-	
+	r[instr.f1.RD] = sr;	
 }
 
 void VirtualMachine::putstat(){
@@ -585,6 +677,7 @@ void VirtualMachine::jumpg(){
 
 void VirtualMachine::call(){
 	clock += 4;
+	
 	if(sp < limit + 6){
 		cout << "Stack Overflow" << endl;
 		exit(6);
@@ -613,7 +706,7 @@ void VirtualMachine::return_(){
 
 void VirtualMachine::read(){
 	clock += 28;
-	cout << "please enter file name to read in (.in) leave extension out: ";
+	cout << "please enter file name: ";
 	cin >> inFile;
 	//ifstream oFile ( fileName.c_str() );
 	inFile = inFile + ".in";
@@ -632,7 +725,7 @@ void VirtualMachine::read(){
 	}
 	else{
 		cout << oFile << " failed to open." << endl;
-		exit(7);
+		exit(1);
 	}
 }
 
@@ -642,27 +735,28 @@ void VirtualMachine::write(){
 	ofstream outFile;
 	string out;
 
-	cout << "Enter file name to print to (.out) leave extension out: ";
+	cout << "Enter file to to print to: ";
 	cin >> out;
 	
 	out = out + ".out";
 	
 	outFile.open( out.c_str() );
-
 	outFile << r[instr.f1.RD] << endl;
+	
 	outFile.close();
 }
 
 void VirtualMachine::halt(){
 	clock += 1;
-	exit(8);
+	
+	exit(1);
 }
 
 void VirtualMachine::noop(){
 	clock += 1;
 }
 
-int main(){
+/*int main(){
 	
 	string fileName;
 	
@@ -671,4 +765,6 @@ int main(){
 	cin >> fileName;
 	
 	vm.run(fileName);
-}
+	
+	return 0;
+}*/
