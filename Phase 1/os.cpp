@@ -14,9 +14,10 @@ int main (int argc, char *argv[]){
 	
 	as.compile(fileName);
 	
-	fileName.pop_back()
+	fileName.pop_back();
 	oFileName = fileName + "o";
-	vm.run(fileName);
+	cout << "The name of the file being opened is: " << oFileName << "\n";
+	vm.run(oFileName);
 
 	return 0;
 }
