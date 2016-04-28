@@ -1,5 +1,9 @@
 Assembler:
+Notes:
 1) tested for ex1, sub2, and add5 -->all working
+2) Switched int to bitset function to C++ portable code
+
+TO-DO
 2) Error handling
 
 

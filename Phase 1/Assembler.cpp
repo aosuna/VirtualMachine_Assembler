@@ -12,13 +12,6 @@
 //type safety check for integral types.
 #define IS_INTEGRAL(T) typename std::enable_if< std::is_integral<T>::value >::type* = 0
 
-//function to convert a int or char byte into a bitset for copying.
-template<class T>
-std::bitset<8> intToBinString(T byte, IS_INTEGRAL(T)){
-	std::bitset<sizeof(T) * CHAR_BIT> bs(byte);
-	return bs;
-}
-
 //enumerated type for switch statement/human readable form (non-member)
 enum opcode {
 	load, 
@@ -339,7 +332,7 @@ void Assembler::setSourceReg(std::string instruction){
 }
 
 
-//function to set either the address or const. address is 0-->256 and const is -128-->0-->128
+//function to set either the address or const. address is 0-->255 and const is -128-->0-->128
 void Assembler::setAddress(std::string instruction){
 	std::size_t position;
 
@@ -356,14 +349,11 @@ void Assembler::setAddress(std::string instruction){
 	std::string::size_type sz;
 	int iaddress = std::stoi(address,&sz);
 
-	std::bitset<8> constAddress;
-	if (iaddress<0){ //the value is a const, can be neg, set to signed char
-		signed char byte = iaddress;
-		constAddress = intToBinString(byte);
-	} else { //the value is either an address, set to unsigned char
-		unsigned char byte = iaddress;
-		constAddress = intToBinString(byte);
+	std::bitset<8> constAddress (iaddress);
+	if (iaddress<-128 || iaddress>255){
+		//throw an error because these are the limits of our addresses
 	}
+
 	//for each of the 8 bits in constant/address loop through and assign to test_instruction
 	for (int i=0; i<=7; i++){
 		test_instruction[i] = constAddress[i];

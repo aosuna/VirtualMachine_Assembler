@@ -68,7 +68,7 @@ void VirtualMachine::run(string fileName){
     limit = 0;	//limit register
 	
 	//cout << "Enter file name for VM to compile: "
-	fileName = fileName + ".o";
+	//fileName = fileName + ".o";
 	//cout << "File sent to VM run() " << fileName << endl;
 	ifstream oFile ( fileName.c_str() );
 	
@@ -754,4 +754,4 @@ void VirtualMachine::halt(){
 
 void VirtualMachine::noop(){
 	clock += 1;
-}
+}
