@@ -1,13 +1,5 @@
-/* *********************** 
-* VirtualMachine.h
-*Written by Aaron Chamberlain & Adrian Osuna April 2016 at CSUSB
-*The header of the Assembler class which compiles a made-up assembly language
-* into an object file of integers to be run in the virtual machine
-*************************/
-
 #ifndef VIRTUALMACHINE_H
 #define VIRTUALMACHINE_H 
-
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -69,7 +61,6 @@ class VirtualMachine{
 			   string oFile; // read o file from assembler
                string inFile; //reads a .in file for read()
                string outFile;	//output a file
-			   string clockFile;
 			   map<int, FP> OPInstruc; //map instructions to function
 
            public:
@@ -77,7 +68,7 @@ class VirtualMachine{
 				void run(string fileName);
 				
 				//status register operations
-				void writeClock(string& clockFile);
+				void writeClock();
  
             	//assembly functions
             	void load();	//r[RD] = mem[ADDR]
