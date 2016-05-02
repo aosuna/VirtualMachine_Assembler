@@ -389,7 +389,7 @@ std::string Assembler::compile(std::string inFileName){
 			//myOutput << file.getInstruction() << "\n"; //DEBUG: Output the binary format of comp. instr.
 			myOutput << file.getInstruction().to_ulong() << "\n";
 			//one final check to make sure it was set correctly
-			std::cout << "The instruction " << line << " is " << file.getInstruction() << ".\n";
+			//std::cout << "The instruction " << line << " is " << file.getInstruction() << ".\n";
 		}
 	}
 

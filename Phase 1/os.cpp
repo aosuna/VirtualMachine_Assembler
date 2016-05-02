@@ -9,15 +9,19 @@ int main (int argc, char *argv[]){
 
 	string fileName;
 	string oFileName;
-	cout << "Enter file name: ";
-	cin >> fileName;
 	
-	as.compile(fileName);
+	if (argc==2){
+		as.compile(argv[1]);
+	} else if (argc==1){
+		cout << "Enter file name: ";
+		cin >> fileName;
 	
-	fileName.pop_back();
-	oFileName = fileName + "o";
-	cout << "The name of the file being opened is: " << oFileName << "\n";
-	vm.run(oFileName);
+		as.compile(fileName);
+	
+		oFileName = fileName.substr(0,fileName.length()-2) + ".o";
+	}
+
+	vm.run(argv[1]);
 
 	return 0;
 }

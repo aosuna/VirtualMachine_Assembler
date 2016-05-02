@@ -60,6 +60,7 @@ class VirtualMachine{
                int limit;	//limit register size of the instructions
 			   string oFile; // read o file from assembler
                string inFile; //reads a .in file for read()
+               string fileName;
                string outFile;	//output a file
 			   map<int, FP> OPInstruc; //map instructions to function
 
@@ -68,7 +69,7 @@ class VirtualMachine{
 				void run(string fileName);
 				
 				//status register operations
-				void writeClock();
+				void writeClock(string& clockFile);
  
             	//assembly functions
             	void load();	//r[RD] = mem[ADDR]
