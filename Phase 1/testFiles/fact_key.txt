@@ -1,0 +1,35 @@
+loadi 0 1 //257
+read 1 //45568
+call 6 //41222
+load 0 33 //33
+write 0 //47104
+halt //49152
+compri 1 1 //27393
+jumpe 14 //37134
+jumpl 14 //35086
+call 16 //41232
+load 0 34 //34
+subi 1 1 //8961
+call 6 //41222
+load 0 33 //33
+store 0 33 //2337
+return //43008
+loadi 2 8 //1288
+loadi 3 0 //1792
+shr 1 //23040
+store 2 35 //3363
+getstat 2 //29696
+andi 2 1 //13569
+jump 25 //33049
+jump 26 //33050
+add 3 0 //5632
+shl 0 //18432
+load 2 35 //1059
+subi 2 1 //9473
+compri 2 0 //27904
+jumpg 18 //39186
+store 3 34 //3874
+return //43008
+noop //51200
+noop //51200
+noop //51200
