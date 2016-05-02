@@ -63,10 +63,13 @@ class VirtualMachine{
                string fileName;
                string outFile;	//output a file
 			   map<int, FP> OPInstruc; //map instructions to function
+			   
 
            public:
             	VirtualMachine();
 				void run(string fileName);
+				string getFileName();
+				void setFileName(string& fileName);
 				
 				//status register operations
 				void writeClock(string& clockFile);

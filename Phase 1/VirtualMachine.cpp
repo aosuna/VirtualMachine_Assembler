@@ -46,6 +46,14 @@ void VirtualMachine::writeClock(string& clockWrite){
 		cout << out << " failed to open." << endl;
 	}
 }
+string VirtualMachine::getFileName(){
+	string openFile = fileName;
+	return openFile;
+}
+
+void VirtualMachine::setFileName(string& fileName){
+	VirtualMachine::fileName = fileName;
+}
 
 void VirtualMachine::run(string fileName){
 	
@@ -57,8 +65,16 @@ void VirtualMachine::run(string fileName){
     base = 0; 	//base register 
     limit = 0;	//limit register
 	
+	setFileName(fileName);
+	//getFileName(fileName);
+	
 	//cout << "File sent to VM run() " << fileName << endl;
-  fileName = fileName.substr(0,fileName.length()-2) + ".o";
+	fileName = fileName.substr(0,fileName.length()-2) + ".o";
+	
+	inFile = fileName.substr(0, fileName.length()-2) + ".in";
+	
+	outFile = fileName.substr(0, fileName.length()-2) + "out";
+	
 	ifstream oFile ( fileName.c_str() );
 	
 	if ( oFile.is_open() ){
@@ -700,13 +716,13 @@ void VirtualMachine::return_(){
 
 void VirtualMachine::read(){
 	clock += 28;
-	cout << "please enter file name: ";
-	cin >> inFile;
-	//ifstream oFile ( fileName.c_str() );
-	inFile = inFile + ".in";
-	ifstream oFile(inFile.c_str());
-	//oFile.open();
+	string inputFile;
+	inputFile = getFileName();
 	
+	inFile = fileName.substr(0, fileName.length()-2) + ".in";
+	
+	ifstream oFile(inFile.c_str());
+
 	if (oFile.is_open()) {
 		string line;
 		int input;
@@ -728,11 +744,9 @@ void VirtualMachine::write(){
 	
 	ofstream outFile;
 	string out;
-
-	cout << "Enter file to to print to: ";
-	cin >> out;
 	
-	out = out + ".out";
+	out = getFileName().substr(0, fileName.length()-2) + ".out";
+	
 	
 	outFile.open( out.c_str() );
 	outFile << r[instr.f1.RD] << endl;
