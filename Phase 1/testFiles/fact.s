@@ -20,7 +20,8 @@ shr 1
 store 2 35
 getstat 2
 andi 2 1
-jump 25
+compri 2 1
+jumpe 25
 jump 26
 add 3 0
 shl 0
