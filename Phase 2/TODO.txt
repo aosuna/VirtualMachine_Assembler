@@ -1,0 +1,21 @@
+TODO
+
+need to modify:
+1:	Virtual Machine to read only from memory
+2:	Only execute for only 15 clock ticks
+3:	set system status codes (might be in os)
+4:	Any Read, Write instructions need to be handled by OS
+
+Need to handle PCB:
+1:	Set running state of the prog
+2:	system clock
+3:	prog's clock
+4:	system status
+5:	set name of running prog
+
+PROGRESS:
+1: modify your OS to run only two programs without any I/O (just compute intensive .s programs). 
+2: modify your OS to handle programs with I/O. 
+3: try several compute and I/O intensive programs. 
+4: modify your OS to gather accounting information. 
+5: modify your OS to handle programs with subroutine calls (which grow stack).
