@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include "VirtualMachine.h"
 #include "Assembler.h"
+#include "PCB.h"
 
 using namespace std;
 

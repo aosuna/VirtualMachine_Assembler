@@ -9,9 +9,6 @@
 #include <fstream>
 #include <type_traits>
 
-//type safety check for integral types.
-#define IS_INTEGRAL(T) typename std::enable_if< std::is_integral<T>::value >::type* = 0
-
 //enumerated type for switch statement/human readable form (non-member)
 enum opcode {
 	load, 

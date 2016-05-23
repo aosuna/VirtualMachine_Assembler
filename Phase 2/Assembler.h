@@ -14,16 +14,6 @@
 #include <type_traits>
 #include <climits>
 
-//type safety check for integral types.
-#define IS_INTEGRAL(T) typename std::enable_if< std::is_integral<T>::value >::type* = 0
-
-//function to convert a int or char byte into a bitset for copying.
-template<class T>
-std::bitset<8> intToBinString(T byte, IS_INTEGRAL(T)){
-	std::bitset<sizeof(T) * CHAR_BIT> bs(byte);
-	return bs;
-}
-
 /*Class Assembler should be instantiated only once */
 class Assembler{
 public:
