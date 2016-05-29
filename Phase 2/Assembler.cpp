@@ -5,9 +5,12 @@
 * into an object file of integers to be run in the virtual machine
 *************************/
 #include "Assembler.h"
-#include <iostream>
-#include <fstream>
-#include <type_traits>
+//#include <iostream>
+//#include <fstream>
+//#include <type_traits>
+
+//type safety check for integral types.
+#define IS_INTEGRAL(T) typename std::enable_if< std::is_integral<T>::value >::type* = 0
 
 //enumerated type for switch statement/human readable form (non-member)
 enum opcode {

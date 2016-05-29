@@ -12,11 +12,16 @@ All Accounting plus VM Utilization & Throughput must appear at end of .out file
 #define PCB_H 
 
 #include <vector>
+#include <string>
+#include <iostream>
 
 using namespace std;
 
 class PCB{
-public:    
+
+friend class os;
+
+private:    
 	//get registers from vm in order to store their state and contents
     static const int REG_FILE_SIZE = 4;
 	vector<int> reg;
@@ -33,8 +38,10 @@ public:
     int turnAroundTime;
     int IOTime;
     int stackSize;
-
-	friend class os;
+	
+	string state;//hold the state of the process:
+				 //new, running, waiting, ready, terminated
+public:
 
     PCB(); //default constructor
     void copyPCBdata(); //function to move all data from runtime to PCB
@@ -42,9 +49,6 @@ public:
     void checkPCBuse(); //if anything has been set the program has been in use.
                         //if all zero then in VMrun() init to standard values
     
-
-private:
-
 };
 
 #endif

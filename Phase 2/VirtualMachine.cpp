@@ -3,6 +3,7 @@
 VirtualMachine::VirtualMachine(){
 		r = vector<int> (REG_FILE_SIZE); //set limit to 4 registers
 		mem = vector<int> (MEM_SIZE); //set memory size to 256
+		//limit = 0;	//limit register
 			
 		//populate map instruction with the address to the class with its opcode
 		OPInstruc[0] = &VirtualMachine::load;
@@ -70,10 +71,6 @@ void VirtualMachine::run(string fileName){
 	
 	//cout << "File sent to VM run() " << fileName << endl;
 	fileName = fileName.substr(0,fileName.length()-2) + ".o";
-	
-	inFile = fileName.substr(0, fileName.length()-2) + ".in";
-	
-	outFile = fileName.substr(0, fileName.length()-2) + "out";
 	
 	ifstream oFile ( fileName.c_str() );
 	

@@ -108,7 +108,7 @@ class VirtualMachine{
 
    public:
       VirtualMachine();
-			void run(string fileName);
+	  void run(string fileName);
 
       friend class os;
 };

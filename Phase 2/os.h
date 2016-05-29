@@ -1,13 +1,8 @@
 #ifndef OS_H
 #define OS_H 
-#include <iostream>
-#include <fstream>
-#include <vector>
+
 #include <queue>
 #include <list>
-#include <string>
-#include <sstream>
-#include <cstdlib>
 #include "VirtualMachine.h"
 #include "Assembler.h"
 #include "PCB.h"
@@ -18,7 +13,7 @@ class os{
 
 	Assembler as;
 	VirtualMachine vm;
-
+private:
 	list<PCB *> jobs;
 	queue<PCB *> readQ, waitQ;
 	PCB * running;
