@@ -3,7 +3,20 @@
 VirtualMachine::VirtualMachine(){
 		r = vector<int> (REG_FILE_SIZE); //set limit to 4 registers
 		mem = vector<int> (MEM_SIZE); //set memory size to 256
-		//limit = 0;	//limit register
+		isRunning = true;
+		oFile =""; // read o file from assembler
+        inFile = ""; //reads a .in file for read()
+        outFile = "";	//output a file
+		
+		//initialize the status registers to 0
+
+		pc = 0;		//program counter
+		ir = 0;		//instruction register
+		sr = 0;		//status register
+		sp = 256;	//stack pointer
+		clock = 0;	//clock counter
+		base = 0; 	//base register 
+		limit = 0;	//limit register
 			
 		//populate map instruction with the address to the class with its opcode
 		OPInstruc[0] = &VirtualMachine::load;
@@ -34,17 +47,18 @@ VirtualMachine::VirtualMachine(){
         OPInstruc[25] = &VirtualMachine::noop;		
 }
 
-void VirtualMachine::writeClock(string& clockWrite){
+void VirtualMachine::writeClock(){
 	//print clock
 	//out used for printing clock under same fileName
-	string out = clockWrite;
-	ofstream outFile (out.c_str(), ios::app);
-	if(outFile.is_open()){
-		outFile << "clock: " << clock << endl;
+	//string out = clockWrite;
+	ofstream out(outFile.c_str(), ios::app);
+	if(out.is_open()){
+		out << "clock: " << clock << endl;
 		//outFile.close();
 	}
 	else{
-		cout << out << " failed to open." << endl;
+		cout << outFile << " failed to open." << endl;
+		isRunning = false;
 	}
 }
 string VirtualMachine::getFileName(){
@@ -56,28 +70,28 @@ void VirtualMachine::setFileName(string& fileName){
 	VirtualMachine::fileName = fileName;
 }
 
-void VirtualMachine::run(string fileName){
+void VirtualMachine::run(){
+	cout << "in vm run\n";
+	cout << "infile initialize: " << inFile << "\n";
+	cout << "outfile initialize: " << outFile << "\n";
+	cout << "vm.limit: " << limit << "\n";
+	cout << "vm.base: " << base << "\n";
+	cout << "vm.pc: " << pc << "\n";
 	
-	pc = 0;		//program counter
-    ir = 0;		//instruction register
-    sr = 0;		//status register
-	sp = 256;	//stack pointer
-    clock = 0;	//clock counter
-    base = 0; 	//base register 
-    limit = 0;	//limit register
-	
-	setFileName(fileName);
+	//setFileName(fileName);
 	//getFileName(fileName);
 	
 	//cout << "File sent to VM run() " << fileName << endl;
-	fileName = fileName.substr(0,fileName.length()-2) + ".o";
+	//fileName = fileName.substr(0,fileName.length()-2) + ".o";
 	
-	ifstream oFile ( fileName.c_str() );
-	
+	//ifstream oFile ( fileName.c_str() );
+
+	/* Phase 1 code
 	if ( oFile.is_open() ){
 		string line;
 		int limitSize = 0;
 		int tempOP;
+		
 		
 		while (!oFile.eof()) {
 			//get line convert from string to int and store in memory location
@@ -93,22 +107,30 @@ void VirtualMachine::run(string fileName){
 		}
 		oFile.close();
 		//set size of limit to the total size of the program
-		limit = limitSize;
-		while(pc <= limit){
-			//look at each instruction in memory
-			ir = mem[pc];
-			//increase program counter
-			pc++;
-			//set the Int value of instruction to the instruction register
-			instr.i = ir;
-			//compare IR to Opcode 
-			(this->*OPInstruc[instr.f1.OP])();
+		limit = limitSize; 
+		Phase 1 code */
+
+		//run program for the base and limit of each process loaded into memory
+		while(isRunning){
+			cout << "Process running: " << oFile << endl;
+				//look at each instruction in memory
+				ir = mem[pc];
+				//increase program counter
+				pc++;
+				//set the Int value of instruction to the instruction register
+				instr.i = ir;
+				//compare IR to Opcode 
+				(this->*OPInstruc[instr.f1.OP])();
+				//isRunning = false;
 		}
+		
+	/*Phase 1 code
 	} 
 	else{
 		cout << fileName << " (.o) failed to open." << endl;
 		exit(1);
 	}
+	Phase 1 code */
 	
 }
 
@@ -120,16 +142,18 @@ void VirtualMachine::load(){
 	//check I bit
 	if(instr.f2.I == 0){
 		//check if loading out of range address
-		if(base + instr.f2.ADDR < base || base + instr.f2.ADDR > limit){
+		if(instr.f2.ADDR + base < base || base + instr.f2.ADDR + base > limit){
 			cout << "Address loaded is out of range." << endl;
-			exit(1);
+			//set[7:5] 010 out of bound
+			sr |= 0b01000000;
+			isRunning = false;
 		}
 		else{
 			clock += 4;
 
 			//set destination register to content in memory address
 			//need to add base of prog start to make sure that prog store witin proper limit
-			r[instr.f2.RD] = mem[base + instr.f2.ADDR];
+			r[instr.f2.RD] = mem[instr.f2.ADDR + base];
 		}
 	}
 	else{
@@ -156,12 +180,14 @@ void VirtualMachine::store(){
 	//check if memory location out of bounds
 	if(instr.f2.ADDR + base < base || instr.f2.ADDR + base > limit){
 		cout << "Address store is out of range" << endl;
-		exit(1);
+		//set[7:5] 010 out of bound
+		sr |= 0b01000000;
+		isRunning = false;
 	}
 	else{
 	//set memory to content of destination register
 	//need to add base of prog start to make sure that prog store witin proper limit
-	mem[base + instr.f2.ADDR] = r[instr.f1.RD];
+	mem[instr.f2.ADDR + base] = r[instr.f1.RD];
 	clock += 4;
 	}	
 }
@@ -633,54 +659,62 @@ void VirtualMachine::putstat(){
 
 void VirtualMachine::jump(){
 	
-	if(instr.f2.ADDR >= limit || instr.f2.ADDR < base){
+	if(instr.f2.ADDR + base >= limit || instr.f2.ADDR + base < base){
 		cout << "Jump out of range." << endl;
-		exit(2);
+		//set[7:5] 010 out of bound
+		sr |= 0b01000000;
+		isRunning = false;
 	}
 	else{
 		clock += 1;
-		pc = instr.f2.ADDR;
+		pc = instr.f2.ADDR + base;
 	}
 }
 
 void VirtualMachine::jumpl(){
-	if(instr.f2.ADDR > limit || instr.f2.ADDR < base){
+	if(instr.f2.ADDR + base > limit || instr.f2.ADDR + base < base){
 		cout << "Jumpl out of range." << endl;
-		exit(3);
+		//set[7:5] 010 out of bound
+		sr |= 0b01000000;
+		isRunning = false;
 	}
 	else{
 		clock += 1;
 		//check less than bit
 		if(sr & 0b1000){
-			pc = instr.f2.ADDR;
+			pc = instr.f2.ADDR + base;
 		}
 	}
 }
 
 void VirtualMachine::jumpe(){
-	if(instr.f2.ADDR > limit || instr.f2.ADDR < base){
+	if(instr.f2.ADDR + base > limit || instr.f2.ADDR + base < base){
 		cout << "Jumpe out of range." << endl;
-		exit(4);
+		//set[7:5] 010 out of bound
+		sr |= 0b01000000;
+		isRunning = false;
 	}
 	else{
 		clock += 1;
 		//check equal to bit
 		if(sr & 0b100){
-			pc = instr.f2.ADDR;
+			pc = instr.f2.ADDR + base;
 		}
 	}
 }
 
 void VirtualMachine::jumpg(){
-	if(instr.f2.ADDR > limit || instr.f2.ADDR < base){
+	if(instr.f2.ADDR + base > limit || instr.f2.ADDR + base < base){
 		cout << "Jumpg out of range." << endl;
-		exit(5);
+		//set[7:5] 010 out of bound
+		sr |= 0b01000000;
+		isRunning = false;
 	}
 	else{
 		clock += 1;
 		//check greater than bit
 		if(sr & 0b10){
-			pc = instr.f2.ADDR;
+			pc = instr.f2.ADDR + base;
 		}
 	}
 }
@@ -690,7 +724,8 @@ void VirtualMachine::call(){
 	
 	if(sp < limit + 6){
 		cout << "Stack Overflow" << endl;
-		exit(6);
+		//set[7:5] 010 stack overflow
+		sr |= 0b01100000;
 	}
 	
 	mem[--sp] = sr;
@@ -700,7 +735,7 @@ void VirtualMachine::call(){
 	mem[--sp] = r[3];
 	mem[--sp] = pc;
 	
-	pc = instr.f2.ADDR;
+	pc = instr.f2.ADDR + base;
 }
 
 void VirtualMachine::return_(){
@@ -716,49 +751,58 @@ void VirtualMachine::return_(){
 
 void VirtualMachine::read(){
 	clock += 28;
-	string inputFile;
-	inputFile = getFileName();
+	//string inputFile;
+	//inputFile = getFileName();
 	
-	inFile = fileName.substr(0, fileName.length()-2) + ".in";
+	//inFile = fileName.substr(0, fileName.length()-2) + ".in";
 	
-	ifstream oFile(inFile.c_str());
+	ifstream in(inFile.c_str());
 
-	if (oFile.is_open()) {
+
+	if (in.is_open()) {
 		string line;
 		int input;
 	
-		getline(oFile, line);
-		istringstream in(line.c_str());
-		in >> input;
+		getline(in, line);
+		istringstream readin(line.c_str());
+		readin >> input;
 		r[instr.f1.RD] = input;
-		oFile.close();
+		in.close();
 	}
 	else{
 		cout << inFile << " failed to open." << endl;
-		exit(1);
+		isRunning = false;
 	}
 }
 
 void VirtualMachine::write(){
 	clock += 28;
 	
-	ofstream outFile;
-	string out;
+	//ofstream outFile;
+	//string out;
 	
-	out = getFileName().substr(0, fileName.length()-2) + ".out";
-	
-	
-	outFile.open( out.c_str() );
-	outFile << r[instr.f1.RD] << endl;
-	
-	writeClock(out);
-	outFile.close();
+	//out = getFileName().substr(0, fileName.length()-2) + ".out";
+	ofstream out(outFile.c_str());
+	if(out.is_open()){
+		out << r[instr.f1.RD] << endl;
+	}
+	else{
+		cout << outFile << "failed to open." << endl;
+		isRunning = false; 
+	}
+	out.close();
 }
 
 void VirtualMachine::halt(){
 	clock += 1;
 	
-	exit(1);
+	//string clockfile = getFileName().substr(0, fileName.length()-2) + ".out";
+	writeClock();
+
+	//set[7:5] 010 stack overflow
+	sr |= 0b00100000;
+	isRunning = false;
+
 }
 
 void VirtualMachine::noop(){

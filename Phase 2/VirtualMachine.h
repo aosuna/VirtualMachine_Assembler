@@ -58,17 +58,24 @@ class VirtualMachine{
         int clock;	//clock counter
         int base; 	//base register
         int limit;	//limit register size of the instructions
+
         string oFile; // read o file from assembler
         string inFile; //reads a .in file for read()
-        string fileName;
         string outFile;	//output a file
+
+        string fileName;
+
         map<int, FP> OPInstruc; //map instructions to function
+
+        string file;
+
+        bool isRunning;
  
         string getFileName();
         void setFileName(string& fileName);
 
         //status register operations
-        void writeClock(string& clockFile);
+        void writeClock();
 
         //assembly functions
         void load();  //r[RD] = mem[ADDR]
@@ -108,7 +115,8 @@ class VirtualMachine{
 
    public:
       VirtualMachine();
-	  void run(string fileName);
+	  //void run(string fileName, int fbase, int flimit);
+      void run();
 
       friend class os;
 };

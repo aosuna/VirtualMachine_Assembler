@@ -19,8 +19,6 @@ using namespace std;
 
 class PCB{
 
-friend class os;
-
 private:    
 	//get registers from vm in order to store their state and contents
     static const int REG_FILE_SIZE = 4;
@@ -38,6 +36,8 @@ private:
     int turnAroundTime;
     int IOTime;
     int stackSize;
+
+    string sfile, ofile, stfile, infile, outfile; //hold the names of the filename + .s, .o, .st, .in, .out 
 	
 	string state;//hold the state of the process:
 				 //new, running, waiting, ready, terminated
@@ -45,9 +45,11 @@ public:
 
     PCB(); //default constructor
     void copyPCBdata(); //function to move all data from runtime to PCB
-    void readPCBdata(); //function to move all data from 22
+    void readPCBdata(); //function to move all data
     void checkPCBuse(); //if anything has been set the program has been in use.
                         //if all zero then in VMrun() init to standard values
+
+    friend class os;
     
 };
 
