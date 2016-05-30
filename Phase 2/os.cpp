@@ -145,6 +145,7 @@ void os::start(){
 		vm.base = (*it)->base;
 		vm.limit = (*it)->limit;
 		vm.pc = (*it)->base;
+		vm.clock = (*it)->clock;
 		vm.run();
 		vm.isRunning = true;
 	}

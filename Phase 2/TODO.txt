@@ -1,21 +1,11 @@
-TODO
+->add context switch to vm
+	->need to save state of the PC register
+	->need to check state of return status for VM  In the OS when context switch occurs 
 
-need to modify:
-1:	Virtual Machine to read only from memory
-2:	Only execute for only 15 clock ticks
-3:	set system status codes (might be in os)
-4:	Any Read, Write instructions need to be handled by OS
+->get PCB in readyQ
+	->add context switch time 
+	->wait time in readyQ
+->ALL TIME NEED TO BE UPDATED(not sure if global CPU time update or each process)
 
-Need to handle PCB:
-1:	Set running state of the prog
-2:	system clock
-3:	prog's clock
-4:	system status
-5:	set name of running prog
-
-PROGRESS:
-1: modify your OS to run only two programs without any I/O (just compute intensive .s programs). 
-2: modify your OS to handle programs with I/O. 
-3: try several compute and I/O intensive programs. 
-4: modify your OS to gather accounting information. 
-5: modify your OS to handle programs with subroutine calls (which grow stack).
+->save for last waitQ and execution of read or write
+->push ready process into readyQ
