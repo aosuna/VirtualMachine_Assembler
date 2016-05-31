@@ -6,6 +6,59 @@ os::os(){
 	//default constructor
 }
 
+void os::saveToPCB(){
+	cout << "********** Will save register to PCB **************" << endl;
+	cout << "process save state is: " << running->sfile << endl;
+
+	cout << "vm.pc: "<< vm.pc << endl;
+	cout << "vm.clock: "<< vm.clock << endl;
+	cout << "vm.r[0]: "<< vm.r[0] << endl;
+	cout << "vm.r[1]: "<< vm.r[1] << endl;
+	cout << "vm.r[2]: "<< vm.r[2] << endl;
+	cout << "vm.r[3]: "<< vm.r[3] << endl;
+	cout << "vm.sr: "<< vm.sr << endl;
+
+	running->pc = vm.pc;
+	running->clock = running->clock + vm.clock; //cpu time
+	running->r[0] = vm.r[0];
+	running->r[1] = vm.r[1];
+	running->r[2] = vm.r[2];
+	running->r[3] = vm.r[3];
+	running->sr = vm.sr;
+}
+void os::restoreToVM(){
+
+	cout << "********** Restoring values from PCB to VM **************" << endl;
+	cout << "process return name is: " << running->sfile << endl;
+
+	cout << "running base PCB: " << running->base << endl;
+	cout << "running limit PCB: "<< vm.limit << endl;
+	cout << "running pc PCB: " << running->pc << endl;
+	cout << "current running clock PCB: " << running->clock << endl;
+	cout << "running ofile PCB: " << running->ofile << endl;
+	cout << "running infile PCB: " << running->infile << endl;
+	cout << "running outfile PCB: " << running->outfile << endl;
+	cout << "running r[0] PCB: " << running->r[0] << endl;
+	cout << "running r[1] PCB: " << running->r[1] << endl;
+	cout << "running r[2] PCB: " << running->r[2] << endl;
+	cout << "running r[3] PCB: " << running->r[3] << endl;
+	cout << "running sr PCB: " << running->sr << endl;
+
+
+	vm.base = running->base;
+	vm.limit = running->limit;
+	vm.pc = running->pc;
+	vm.clock = running->clock;
+	vm.oFile = running->ofile;
+	vm.inFile = running->infile;
+	vm.outFile = running->outfile;
+	vm.r[0] = running->r[0];
+	vm.r[1] = running->r[1];
+	vm.r[2] = running->r[2];
+	vm.r[3] = running->r[3];
+	vm.sr = running->sr;
+}
+
 void os::start(){
 	
 	string line, instrLine;
@@ -60,7 +113,7 @@ void os::start(){
 				cout << "new file open asCode \n";
 /**********************************************delete*up**************************************************/
 
-				while(asCode.good()) {
+				while(asCode.good()) { //store .o file into vm.mem
 						getline(asCode, instrLine);
 						//if line is blank then move on and DO NOTHING
 						if(instrLine == ""){
@@ -90,10 +143,11 @@ void os::start(){
 					sysBase = sysLimit;
 				}
 
-				//set new limit to program
+				//set base and limit for each PCB
 				sysLimit = count;
 				p->base = sysBase;
 				p->limit = sysLimit;
+				p->pc = p->base;
 
 /**********************************************delete*down**************************************************/
 				cout << "base for progcess is: " << sysBase << endl;
@@ -114,14 +168,10 @@ void os::start(){
 		} //end while loop where progs is being loaded and assembled
 		sFiles.close();
 	} else{
-		cout << "progs" << " failed to open \n";
-	}
-	//set limit to total count of instructions loaded into mem
+			cout << "progs" << " failed to open \n";
+	  }
+	//set total limit, has limit of all instructions in memory
 	vm.limit = count;
-
-
-/**********************************************delete*down**************************************************/
-	//set the limit for the whole number of instructions
 	
 	cout << "\n\n\n Content in whole memory\n";
 	//
@@ -130,9 +180,70 @@ void os::start(){
 	}
 	cout << "total number of instructions in memory are: " << vm.limit << endl;
 
+	//use readyQ to run process
+	cout << "\nContent inside each job using readyQ:\n";
+		while(!readyQ.empty()){
+
+			running = readyQ.front();
+			cout << "running process: " <<  running->sfile << endl; 
+			readyQ.pop();
+
+			restoreToVM();
+			vm.run();
+
+			int tempSR = vm.sr;
+			tempSR = tempSR >> 5;
+			tempSR &= 0b111;
+			
+			switch(tempSR){
+					case 0:
+						saveToPCB();
+						readyQ.push(running);
+						cout << "time slice" << endl;
+						break;
+
+					case 1:
+						running->clock = running->clock + vm.clock;
+
+						vm.clock = running->clock; //used for testing output of clock in vm.
+						vm.writeClock();
+
+						cout << "halt was called"  << endl;
+						break;
+					case 2:
+						running->clock = running->clock + vm.clock;
+						cout << "Out of bound called" << endl;
+						break;
+
+					case 3:
+						cout << "Stack Overflow" << endl;
+						break;
+					case 4:
+						cout << "Stack Underflow" << endl;
+						break;
+					case 5:
+						cout << "Invalid OpCode" << endl;
+						break;
+					case 6:
+						cout << "Read Operation" << endl;
+						break;
+					case 7:
+						cout << "Write Operation" << endl;
+						break;
+					default:
+						cout << "Went to default" << endl;
+
+						break;
+				}
+
+		//need to check the vm.sr here 
+		//int checkSR = vm.sr;
+	}
+
+/**********************************************delete*down**************************************************/
+	
 	//check list<PCB *> jobs to see if values are populated
-	cout << "\nContent inside each job \n";
-	list<PCB *>::iterator it;
+	/*list<PCB *>::iterator it;
 	for(it = jobs.begin(); it != jobs.end(); it++){
 		cout << "Process name: ";
 		cout << (*it)->sfile << "\n";
@@ -148,7 +259,7 @@ void os::start(){
 		vm.clock = (*it)->clock;
 		vm.run();
 		vm.isRunning = true;
-	}
+	}*/
 /**********************************************delete*up**************************************************/
 };
 

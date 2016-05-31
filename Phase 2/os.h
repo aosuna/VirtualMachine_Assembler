@@ -19,9 +19,8 @@ private:
 	queue<PCB *> readyQ, waitQ; //create a queue of object PCB
 	PCB * running; //create a pointer to PCB  
 
-	void returnVM();	//send PCB to OS
-	void sendVM();		//send PCB to Virtual Machine
-	void errStatus();	//return error status
+	void saveToPCB();   //save status of VM to PCB
+	void restoreToVM(); //send PCB to VM to execute
 	void loadMemory();
 
 

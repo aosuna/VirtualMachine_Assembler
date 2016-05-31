@@ -3,7 +3,6 @@
 VirtualMachine::VirtualMachine(){
 		r = vector<int> (REG_FILE_SIZE); //set limit to 4 registers
 		mem = vector<int> (MEM_SIZE); //set memory size to 256
-		isRunning = true;
 		oFile =""; // read o file from assembler
         inFile = ""; //reads a .in file for read()
         outFile = "";	//output a file
@@ -71,12 +70,17 @@ void VirtualMachine::setFileName(string& fileName){
 }
 
 void VirtualMachine::run(){
+	isRunning = true;
+	clock = 0;
 	cout << "in vm run\n";
 	cout << "infile initialize: " << inFile << "\n";
 	cout << "outfile initialize: " << outFile << "\n";
 	cout << "vm.limit: " << limit << "\n";
 	cout << "vm.base: " << base << "\n";
 	cout << "vm.pc: " << pc << "\n";
+
+	//clear vm return status;
+	sr &= 0b00011111;
 	
 	//setFileName(fileName);
 	//getFileName(fileName);
@@ -121,7 +125,13 @@ void VirtualMachine::run(){
 				instr.i = ir;
 				//compare IR to Opcode 
 				(this->*OPInstruc[instr.f1.OP])();
-				//isRunning = false;
+				
+				//check that number of clock ticks for executed programs is less than 15 
+				//if clock ticks is 15 or more strop executions, os needs to check the sr 
+				if(clock > 15){
+					sr |= 0b00000000;
+					isRunning = false;
+				}
 		}
 		
 	/*Phase 1 code
@@ -142,7 +152,7 @@ void VirtualMachine::load(){
 	//check I bit
 	if(instr.f2.I == 0){
 		//check if loading out of range address
-		if(instr.f2.ADDR + base < base || base + instr.f2.ADDR + base > limit){
+		if(instr.f2.ADDR + base < base || base + instr.f2.ADDR > limit){
 			cout << "Address loaded is out of range." << endl;
 			//set[7:5] 010 out of bound
 			sr |= 0b01000000;
@@ -726,6 +736,7 @@ void VirtualMachine::call(){
 		cout << "Stack Overflow" << endl;
 		//set[7:5] 010 stack overflow
 		sr |= 0b01100000;
+		isRunning = false;
 	}
 	
 	mem[--sp] = sr;
@@ -740,6 +751,13 @@ void VirtualMachine::call(){
 
 void VirtualMachine::return_(){
 	clock += 4;
+	//under flow if trying to pop status from mem[251]
+	//if sp is at location 251 there is nothing to pop at location 256 or beyond 
+	if(sp >= 256 - 5){
+		cout << "Stack Underflow" << endl;
+		sr |= 0b10000000;
+		isRunning = false;
+	}
 	
 	pc = mem[sp++];
 	r[3] = mem[sp++];
@@ -776,12 +794,18 @@ void VirtualMachine::read(){
 }
 
 void VirtualMachine::write(){
-	clock += 28;
+	//clock += 28;
 	
 	//ofstream outFile;
 	//string out;
 	
 	//out = getFileName().substr(0, fileName.length()-2) + ".out";
+
+	int tempsr |= 0b11100000;
+	int tempReg = r[instr.f1.RD];
+	tempReg = tempReg << 8;
+	sr = (tempReg | tempsr);
+
 	ofstream out(outFile.c_str());
 	if(out.is_open()){
 		out << r[instr.f1.RD] << endl;
@@ -795,12 +819,12 @@ void VirtualMachine::write(){
 
 void VirtualMachine::halt(){
 	clock += 1;
-	
-	//string clockfile = getFileName().substr(0, fileName.length()-2) + ".out";
-	writeClock();
 
 	//set[7:5] 010 stack overflow
 	sr |= 0b00100000;
+	//string clockfile = getFileName().substr(0, fileName.length()-2) + ".out";
+	//writeClock();
+	
 	isRunning = false;
 
 }

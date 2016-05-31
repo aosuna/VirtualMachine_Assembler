@@ -22,7 +22,7 @@ class PCB{
 private:    
 	//get registers from vm in order to store their state and contents
     static const int REG_FILE_SIZE = 4;
-	vector<int> reg;
+	vector<int> r;
 	int pc;		//program counter
     int ir;		//instruction register
     int sr;		//status register
@@ -44,6 +44,8 @@ private:
 public:
 
     PCB(); //default constructor
+    void readPCB(int register); // take in sr and read in value to reg
+    void writePCB(); //write to file
     void copyPCBdata(); //function to move all data from runtime to PCB
     void readPCBdata(); //function to move all data
     void checkPCBuse(); //if anything has been set the program has been in use.
