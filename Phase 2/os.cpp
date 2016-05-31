@@ -185,6 +185,7 @@ void os::start(){
 		while(!readyQ.empty()){
 
 			running = readyQ.front();
+			running->state = "running";
 			cout << "running process: " <<  running->sfile << endl; 
 			readyQ.pop();
 
@@ -198,47 +199,54 @@ void os::start(){
 			switch(tempSR){
 					case 0:
 						saveToPCB();
+						running->state = "ready";
 						readyQ.push(running);
 						cout << "time slice" << endl;
 						break;
 
 					case 1:
+						running->state = "terminated";
 						running->clock = running->clock + vm.clock;
-
 						vm.clock = running->clock; //used for testing output of clock in vm.
 						vm.writeClock();
-
 						cout << "halt was called"  << endl;
 						break;
 					case 2:
 						running->clock = running->clock + vm.clock;
+						running->state = "terminated";
 						cout << "Out of bound called" << endl;
 						break;
 
 					case 3:
+						running->state = "terminated";
 						cout << "Stack Overflow" << endl;
 						break;
 					case 4:
+						running->state = "terminated";
 						cout << "Stack Underflow" << endl;
 						break;
 					case 5:
+						running->state = "terminated";
 						cout << "Invalid OpCode" << endl;
 						break;
 					case 6:
+						running->state = "waiting";
+						saveToPCB();
+						waitQ.push(running);
+						PCB.readPCB();
 						cout << "Read Operation" << endl;
 						break;
 					case 7:
+						running->state = "waiting";
+						saveToPCB();
+						waitQ.push(running);
 						cout << "Write Operation" << endl;
 						break;
 					default:
 						cout << "Went to default" << endl;
-
 						break;
 				}
-
-		//need to check the vm.sr here 
-		//int checkSR = vm.sr;
-	}
+		}
 
 /**********************************************delete*down**************************************************/
 	

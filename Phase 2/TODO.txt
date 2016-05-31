@@ -1,11 +1,17 @@
-->add context switch to vm
-	->need to save state of the PC register
-	->need to check state of return status for VM  In the OS when context switch occurs 
+TODO
 
-->get PCB in readyQ
-	->add context switch time 
-	->wait time in readyQ
-->ALL TIME NEED TO BE UPDATED(not sure if global CPU time update or each process)
+need to modify:
 
-->save for last waitQ and execution of read or write
-->push ready process into readyQ
+1:	Any Read, Write instructions need to be handled by PCB
+
+Need to handle PCB:
+
+1:	system clock
+2:	prog's clock
+3: System status'
+
+PROGRESS:
+1: modify your OS to handle programs with I/O. 
+2: try several compute and I/O intensive programs. 
+3: modify your OS to gather accounting information. 
+4: modify your OS to handle programs with subroutine calls (which grow stack).

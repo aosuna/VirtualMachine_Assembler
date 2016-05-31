@@ -41,11 +41,14 @@ private:
 	
 	string state;//hold the state of the process:
 				 //new, running, waiting, ready, terminated
+
+    void readPCB(); // take in sr and read in value to reg
+    void writePCB(); //write to file
+
 public:
 
     PCB(); //default constructor
-    void readPCB(int register); // take in sr and read in value to reg
-    void writePCB(); //write to file
+    
     void copyPCBdata(); //function to move all data from runtime to PCB
     void readPCBdata(); //function to move all data
     void checkPCBuse(); //if anything has been set the program has been in use.

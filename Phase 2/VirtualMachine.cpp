@@ -72,15 +72,16 @@ void VirtualMachine::setFileName(string& fileName){
 void VirtualMachine::run(){
 	isRunning = true;
 	clock = 0;
+
+	//clear vm return status;
+	sr &= 0b0000011111;
+
 	cout << "in vm run\n";
 	cout << "infile initialize: " << inFile << "\n";
 	cout << "outfile initialize: " << outFile << "\n";
 	cout << "vm.limit: " << limit << "\n";
 	cout << "vm.base: " << base << "\n";
 	cout << "vm.pc: " << pc << "\n";
-
-	//clear vm return status;
-	sr &= 0b00011111;
 	
 	//setFileName(fileName);
 	//getFileName(fileName);
@@ -129,7 +130,7 @@ void VirtualMachine::run(){
 				//check that number of clock ticks for executed programs is less than 15 
 				//if clock ticks is 15 or more strop executions, os needs to check the sr 
 				if(clock > 15){
-					sr |= 0b00000000;
+					sr &= 0b1100011111;
 					isRunning = false;
 				}
 		}
@@ -768,14 +769,22 @@ void VirtualMachine::return_(){
 }
 
 void VirtualMachine::read(){
-	clock += 28;
+	
+	int tempsr = sr & 0b11111111; // mask the status register to 8 bits
+	int tempReg = r[instr.f1.RD]; // set temp to register wanting to write out
+	tempReg = tempReg << 8;       // shift left to bits [9:8]
+	sr = tempsr	| tempReg;		  // put values together
+	sr &= 0b1111011111;			  // add VM Return status to bits [7:5]
+
+	isRunning = false;
+
+	//clock += 28;
 	//string inputFile;
 	//inputFile = getFileName();
 	
 	//inFile = fileName.substr(0, fileName.length()-2) + ".in";
 	
-	ifstream in(inFile.c_str());
-
+	/*ifstream in(inFile.c_str());
 
 	if (in.is_open()) {
 		string line;
@@ -790,10 +799,19 @@ void VirtualMachine::read(){
 	else{
 		cout << inFile << " failed to open." << endl;
 		isRunning = false;
-	}
+	}*/
 }
 
 void VirtualMachine::write(){
+
+	int tempsr = sr & 0b11111111; // mask the status register to 8 bits
+	int tempReg = r[instr.f1.RD]; // set temp to register wanting to write out
+	tempReg = tempReg << 8;       // shift left to bits [9:8]
+	sr = tempsr	| tempReg;		  // put values together
+	sr &= 0b1111111111;			  // add VM Return status to bits [7:5]
+
+	isRunning = false;
+
 	//clock += 28;
 	
 	//ofstream outFile;
@@ -801,12 +819,7 @@ void VirtualMachine::write(){
 	
 	//out = getFileName().substr(0, fileName.length()-2) + ".out";
 
-	int tempsr |= 0b11100000;
-	int tempReg = r[instr.f1.RD];
-	tempReg = tempReg << 8;
-	sr = (tempReg | tempsr);
-
-	ofstream out(outFile.c_str());
+	/*ofstream out(outFile.c_str());
 	if(out.is_open()){
 		out << r[instr.f1.RD] << endl;
 	}
@@ -814,7 +827,7 @@ void VirtualMachine::write(){
 		cout << outFile << "failed to open." << endl;
 		isRunning = false; 
 	}
-	out.close();
+	out.close();*/
 }
 
 void VirtualMachine::halt(){
