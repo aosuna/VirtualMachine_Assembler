@@ -71,11 +71,11 @@ class VirtualMachine{
 
         bool isRunning;
  
-        string getFileName();
-        void setFileName(string& fileName);
+        //string getFileName();
+        //void setFileName(string& fileName);
 
         //status register operations
-        void writeClock();
+        //void writeClock();
 
         //assembly functions
         void load();  //r[RD] = mem[ADDR]

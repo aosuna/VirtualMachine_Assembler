@@ -82,67 +82,26 @@ void VirtualMachine::run(){
 	cout << "vm.limit: " << limit << "\n";
 	cout << "vm.base: " << base << "\n";
 	cout << "vm.pc: " << pc << "\n";
-	
-	//setFileName(fileName);
-	//getFileName(fileName);
-	
-	//cout << "File sent to VM run() " << fileName << endl;
-	//fileName = fileName.substr(0,fileName.length()-2) + ".o";
-	
-	//ifstream oFile ( fileName.c_str() );
-
-	/* Phase 1 code
-	if ( oFile.is_open() ){
-		string line;
-		int limitSize = 0;
-		int tempOP;
-		
-		
-		while (!oFile.eof()) {
-			//get line convert from string to int and store in memory location
-			getline(oFile, line);
-			//convert string to int by using stringstream and pass value to tempOP
-			stringstream op(line);
-			op >> tempOP;
-			//load file line into memory
-			mem[limitSize] = tempOP;
-			//increase to next memory location
-			limitSize++;
-
-		}
-		oFile.close();
-		//set size of limit to the total size of the program
-		limit = limitSize; 
-		Phase 1 code */
 
 		//run program for the base and limit of each process loaded into memory
-		while(isRunning){
-			cout << "Process running: " << oFile << endl;
-				//look at each instruction in memory
-				ir = mem[pc];
-				//increase program counter
-				pc++;
-				//set the Int value of instruction to the instruction register
-				instr.i = ir;
-				//compare IR to Opcode 
-				(this->*OPInstruc[instr.f1.OP])();
-				
-				//check that number of clock ticks for executed programs is less than 15 
-				//if clock ticks is 15 or more strop executions, os needs to check the sr 
-				if(clock > 15){
-					sr &= 0b1100011111;
-					isRunning = false;
-				}
-		}
-		
-	/*Phase 1 code
-	} 
-	else{
-		cout << fileName << " (.o) failed to open." << endl;
-		exit(1);
+	while(isRunning){
+		cout << "Process running: " << oFile << endl;
+			//look at each instruction in memory
+			ir = mem[pc];
+			//increase program counter
+			pc++;
+			//set the Int value of instruction to the instruction register
+			instr.i = ir;
+			//compare IR to Opcode 
+			(this->*OPInstruc[instr.f1.OP])();
+			
+			//check that number of clock ticks for executed programs is less than 15 
+			//if clock ticks is 15 or more strop executions, os needs to check the sr 
+			if(clock > 15){
+				sr &= 0b1100011111;
+				isRunning = false;
+			}
 	}
-	Phase 1 code */
-	
 }
 
 void VirtualMachine::load(){
@@ -777,29 +736,6 @@ void VirtualMachine::read(){
 	sr &= 0b1111011111;			  // add VM Return status to bits [7:5]
 
 	isRunning = false;
-
-	//clock += 28;
-	//string inputFile;
-	//inputFile = getFileName();
-	
-	//inFile = fileName.substr(0, fileName.length()-2) + ".in";
-	
-	/*ifstream in(inFile.c_str());
-
-	if (in.is_open()) {
-		string line;
-		int input;
-	
-		getline(in, line);
-		istringstream readin(line.c_str());
-		readin >> input;
-		r[instr.f1.RD] = input;
-		in.close();
-	}
-	else{
-		cout << inFile << " failed to open." << endl;
-		isRunning = false;
-	}*/
 }
 
 void VirtualMachine::write(){
@@ -811,35 +747,15 @@ void VirtualMachine::write(){
 	sr &= 0b1111111111;			  // add VM Return status to bits [7:5]
 
 	isRunning = false;
-
-	//clock += 28;
-	
-	//ofstream outFile;
-	//string out;
-	
-	//out = getFileName().substr(0, fileName.length()-2) + ".out";
-
-	/*ofstream out(outFile.c_str());
-	if(out.is_open()){
-		out << r[instr.f1.RD] << endl;
-	}
-	else{
-		cout << outFile << "failed to open." << endl;
-		isRunning = false; 
-	}
-	out.close();*/
 }
 
 void VirtualMachine::halt(){
 	clock += 1;
 
-	//set[7:5] 010 stack overflow
+	//set[7:5] 001 halt
 	sr |= 0b00100000;
-	//string clockfile = getFileName().substr(0, fileName.length()-2) + ".out";
-	//writeClock();
 	
 	isRunning = false;
-
 }
 
 void VirtualMachine::noop(){

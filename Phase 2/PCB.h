@@ -14,6 +14,8 @@ All Accounting plus VM Utilization & Throughput must appear at end of .out file
 #include <vector>
 #include <string>
 #include <iostream>
+#include <sstream>
+#include <fstream>
 
 using namespace std;
 
@@ -31,16 +33,20 @@ private:
     int base; 	//base register
     int limit;	//limit register size of the instructions
 
-    int CPUTime; //read and write each take 1 CPU clock tick and 27 I/O clock ticks
+    int CPUTime; //read and write each take 1 CPU clock tick and 28 I/O clock ticks
     int waitingTime;
     int turnAroundTime;
     int IOTime;
     int stackSize;
+    int contextSwitchTime;
+    int idleTime;
+
+    ofstream writeFile;
+    ifstream readFile;
 
     string sfile, ofile, stfile, infile, outfile; //hold the names of the filename + .s, .o, .st, .in, .out 
 	
-	string state;//hold the state of the process:
-				 //new, running, waiting, ready, terminated
+	string state;//hold the state of the process: new, running, waiting, ready, terminated
 
     void readPCB(); // take in sr and read in value to reg
     void writePCB(); //write to file
@@ -48,11 +54,6 @@ private:
 public:
 
     PCB(); //default constructor
-    
-    void copyPCBdata(); //function to move all data from runtime to PCB
-    void readPCBdata(); //function to move all data
-    void checkPCBuse(); //if anything has been set the program has been in use.
-                        //if all zero then in VMrun() init to standard values
 
     friend class os;
     

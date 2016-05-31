@@ -3,7 +3,72 @@
 using namespace std;
 
 os::os(){
+	OSContextSwitchTime = 0;
+	OSOperatingTime = 0;
 	//default constructor
+}
+
+void os::VMReturnStatus(){
+	int tempSR = vm.sr;
+	tempSR = tempSR >> 5;
+	tempSR &= 0b111;
+
+	switch(tempSR){
+			case 0:
+			saveToPCB();
+			running->state = "ready";
+			readyQ.push(running);
+			cout << "time slice" << endl;
+			break;
+		case 1:
+			running->state = "terminated";
+			running->clock = running->clock + vm.clock;
+			//vm.clock = running->clock; //used for testing output of clock in vm.
+			//vm.writeClock();
+			cout << "halt was called"  << endl;
+			break;
+		case 2:
+			running->clock = running->clock + vm.clock;
+			running->state = "terminated";
+			cout << "Out of bound called" << endl;
+			break;
+		case 3:
+			running->state = "terminated";
+			cout << "Stack Overflow" << endl;
+			break;
+		case 4:
+			running->state = "terminated";
+			cout << "Stack Underflow" << endl;
+			break;
+		case 5:
+			running->state = "terminated";
+			cout << "Invalid OpCode" << endl;
+			break;
+		case 6:
+			running->state = "waiting";
+			running->IOTime = vm.clock + 28;
+			saveToPCB();
+			waitQ.push(running);
+			running->CPUTime = running->CPUTime + 1;
+			running->IOTime = running_IOTime + 28;
+			PCB.readPCB();
+			cout << "Read Operation" << endl;
+			break;
+		case 7:
+			running->state = "waiting";
+			running->IOTime = vm.clock + 28;
+			saveToPCB();
+			waitQ.push(running);
+			running->CPUTime = running->CPUTime + 1;
+			running->IOTime = running_IOTime + 28;
+			PCB.writePCB();
+			cout << "Write Operation" << endl;
+			break;
+		default:
+			cout << "Went to default" << endl;
+		break;
+	}
+
 }
 
 void os::saveToPCB(){
@@ -26,6 +91,7 @@ void os::saveToPCB(){
 	running->r[3] = vm.r[3];
 	running->sr = vm.sr;
 }
+
 void os::restoreToVM(){
 
 	cout << "********** Restoring values from PCB to VM **************" << endl;
@@ -162,27 +228,29 @@ void os::start(){
 				cout << "\nbase is : " << sysBase;
 				cout << "\nlimit is : " << sysLimit << "\n";
 /**********************************************delete*up**************************************************/
-
 			}
 
 		} //end while loop where progs is being loaded and assembled
 		sFiles.close();
-	} else{
-			cout << "progs" << " failed to open \n";
-	  }
+	} 
+	else{
+		cout << "progs" << " failed to open \n";
+	}
 	//set total limit, has limit of all instructions in memory
 	vm.limit = count;
-	
+
+/**********************************************delete*down**************************************************/	
 	cout << "\n\n\n Content in whole memory\n";
 	//
 	for(int i = 0; i <= vm.limit; i++){
 		cout << vm.mem[i] << endl;
 	}
 	cout << "total number of instructions in memory are: " << vm.limit << endl;
-
-	//use readyQ to run process
+	
 	cout << "\nContent inside each job using readyQ:\n";
-		while(!readyQ.empty()){
+	/**********************************************delete*up**************************************************/
+	//use readyQ to run process
+		while(!readyQ.empty() || !waitQ.empty()){
 
 			running = readyQ.front();
 			running->state = "running";
@@ -192,60 +260,46 @@ void os::start(){
 			restoreToVM();
 			vm.run();
 
-			int tempSR = vm.sr;
-			tempSR = tempSR >> 5;
-			tempSR &= 0b111;
-			
-			switch(tempSR){
-					case 0:
-						saveToPCB();
-						running->state = "ready";
-						readyQ.push(running);
-						cout << "time slice" << endl;
-						break;
+			OSOperatingTime = OSOperatingTime + 5;
+			OSContextSwitchTime = OSContextSwitchTime + 5;
 
-					case 1:
-						running->state = "terminated";
-						running->clock = running->clock + vm.clock;
-						vm.clock = running->clock; //used for testing output of clock in vm.
-						vm.writeClock();
-						cout << "halt was called"  << endl;
-						break;
-					case 2:
-						running->clock = running->clock + vm.clock;
-						running->state = "terminated";
-						cout << "Out of bound called" << endl;
-						break;
-
-					case 3:
-						running->state = "terminated";
-						cout << "Stack Overflow" << endl;
-						break;
-					case 4:
-						running->state = "terminated";
-						cout << "Stack Underflow" << endl;
-						break;
-					case 5:
-						running->state = "terminated";
-						cout << "Invalid OpCode" << endl;
-						break;
-					case 6:
-						running->state = "waiting";
-						saveToPCB();
-						waitQ.push(running);
-						PCB.readPCB();
-						cout << "Read Operation" << endl;
-						break;
-					case 7:
-						running->state = "waiting";
-						saveToPCB();
-						waitQ.push(running);
-						cout << "Write Operation" << endl;
-						break;
-					default:
-						cout << "Went to default" << endl;
-						break;
+			//update all nonterminated processes with context switch time
+			list<PCB *>::iterator it;
+			for(it = jobs.begin(); it != jobs.end(); it++){
+				if((*it)->state == "terminated"){
+					continue;
 				}
+				else{
+					(*it)->contextSwitchTime = (*it)->contextSwitchTime + 5;
+				}
+			}
+			//add the number of clock tick of the running process as wait time for all proceses in readyQ
+			for(it = jobs.begin(); it != jobs.end(); it++){
+				if((*it)->state == "ready"){
+					(*it)->waitingTime = (*it)->waitingTime + vm.clock;
+				}
+				else{
+					continue;
+				}
+			}
+
+			//check if process is in waitQ is less than total OS time
+			//if it is waiting completed, change state to ready and send to readyQ
+			if(!waitQ.empty()){
+				while(waitQ.front()->IOTime <= OSOperatingTime){
+					PCB * waiting = waitQ.front();
+					waitQ.pop();
+					waiting->state = "ready";
+					readyQ.push(waiting);
+					if(waitQ.size() == 0){
+						break;
+					}
+				}
+			}
+
+			VMReturnStatus(); //will send to waitQ, readyQ, or terminiate process
+			
+
 		}
 
 /**********************************************delete*down**************************************************/
@@ -272,8 +326,8 @@ void os::start(){
 };
 
 int main(){
-	os main;
-	main.start();
+	os system;
+	system.start();
 	
 	return 0;
 }

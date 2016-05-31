@@ -18,10 +18,12 @@ private:
 	list<PCB *> jobs; //create a list of object PCB
 	queue<PCB *> readyQ, waitQ; //create a queue of object PCB
 	PCB * running; //create a pointer to PCB  
+	int OSContextSwitchTime; //total context switch time for all processes
+	int OSOperatingTime;
 
-	void saveToPCB();   //save status of VM to PCB
-	void restoreToVM(); //send PCB to VM to execute
-	void loadMemory();
+	void saveToPCB();   	//save status of VM to PCB
+	void restoreToVM(); 	//send PCB to VM to execute
+	void VMReturnStatus(); 	//function to handle the return status code for VM
 
 
 public:
