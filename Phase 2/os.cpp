@@ -12,6 +12,9 @@ void os::VMReturnStatus(){
 	int tempSR = vm.sr;
 	tempSR = tempSR >> 5;
 	tempSR &= 0b111;
+	
+	OSOperatingTime = OSOperatingTime + vm.clock;
+	running->CPUTime = running->CPUTime + vm.clock;
 
 	switch(tempSR){
 			case 0:
@@ -22,13 +25,12 @@ void os::VMReturnStatus(){
 			break;
 		case 1:
 			running->state = "terminated";
-			running->clock = running->clock + vm.clock;
 			//vm.clock = running->clock; //used for testing output of clock in vm.
 			//vm.writeClock();
 			cout << "halt was called"  << endl;
 			break;
 		case 2:
-			running->clock = running->clock + vm.clock;
+			
 			running->state = "terminated";
 			cout << "Out of bound called" << endl;
 			break;
@@ -45,23 +47,28 @@ void os::VMReturnStatus(){
 			cout << "Invalid OpCode" << endl;
 			break;
 		case 6:
+			OSOperatingTime = OSOperatingTime + 1;
 			running->state = "waiting";
-			running->IOTime = vm.clock + 28;
-			saveToPCB();
-			waitQ.push(running);
+			running->interruptTime = OSOperatingTime + 28;
 			running->CPUTime = running->CPUTime + 1;
-			running->IOTime = running_IOTime + 28;
+			running->IOTime = running->IOTime + 28;
+			
+			saveToPCB();
+			//function that read from file into register
 			PCB.readPCB();
+			waitQ.push(running);
 			cout << "Read Operation" << endl;
 			break;
 		case 7:
+			OSOperatingTime = OSOperatingTime + 1;
 			running->state = "waiting";
-			running->IOTime = vm.clock + 28;
-			saveToPCB();
-			waitQ.push(running);
+			running->interruptTime = OSOperatingTime + 28;
 			running->CPUTime = running->CPUTime + 1;
-			running->IOTime = running_IOTime + 28;
+			running->IOTime = running->IOTime + 28;
+			saveToPCB();
+			//function that writes the register to file
 			PCB.writePCB();
+			waitQ.push(running);
 			cout << "Write Operation" << endl;
 			break;
 		default:
@@ -84,12 +91,22 @@ void os::saveToPCB(){
 	cout << "vm.sr: "<< vm.sr << endl;
 
 	running->pc = vm.pc;
-	running->clock = running->clock + vm.clock; //cpu time
 	running->r[0] = vm.r[0];
 	running->r[1] = vm.r[1];
 	running->r[2] = vm.r[2];
 	running->r[3] = vm.r[3];
 	running->sr = vm.sr;
+	running->sp = vm.sp;
+	
+	if(vm.sp < 256){
+		PCB.writeFile(running->stfile.c_str(), ios::app);
+		if(!PCB.writeFile.is_open()){
+			cout << running->stfile << "failed to open. \n";
+		}
+		for(int i = vm.sp; i < 256; i++){
+			writeFile << vm.mem[i] << endl;
+		}
+	}
 }
 
 void os::restoreToVM(){
@@ -114,7 +131,6 @@ void os::restoreToVM(){
 	vm.base = running->base;
 	vm.limit = running->limit;
 	vm.pc = running->pc;
-	vm.clock = running->clock;
 	vm.oFile = running->ofile;
 	vm.inFile = running->infile;
 	vm.outFile = running->outfile;
@@ -123,6 +139,43 @@ void os::restoreToVM(){
 	vm.r[2] = running->r[2];
 	vm.r[3] = running->r[3];
 	vm.sr = running->sr;
+	vm.sp = running->sp;
+	
+	if(running.sp < 256){
+		int info;
+		string rline;
+		int tempSP = running->sp;
+		PCB.readFile.open(running->stfile.c_str());
+		
+		if(PCB.readFile.is_open()){
+			while(PCB.readFile.good()){
+				getline(PCB.readFile, rline)
+				if(rline == ""){
+					continue;
+				}else{
+					stringstream convert(line);
+					convert >> info;
+					vm.mem[tempSP] = info;
+					tempSP++;
+				}
+			}
+		}else{
+			cout << running->stfile << "failed to open. \n";
+		}
+	}
+}
+
+void os::closePCBFiles(){
+	list<PCB *>::iterator it;
+	
+	for(it = jobs.begin(); it < jobs.size(); it++){
+		if((*it)->writeFile.is_open()){
+			(*it)->writeFile.close();
+		}
+		if((*it)->readFile.is_open()){
+			(*it)->readFile.close();
+		}
+	}
 }
 
 void os::start(){
@@ -249,6 +302,8 @@ void os::start(){
 	
 	cout << "\nContent inside each job using readyQ:\n";
 	/**********************************************delete*up**************************************************/
+	
+///////////////////////////////////////////////////////// RUNNING PROCESSES /////////////////////////////////////////////////////////////////
 	//use readyQ to run process
 		while(!readyQ.empty() || !waitQ.empty()){
 
@@ -286,7 +341,7 @@ void os::start(){
 			//check if process is in waitQ is less than total OS time
 			//if it is waiting completed, change state to ready and send to readyQ
 			if(!waitQ.empty()){
-				while(waitQ.front()->IOTime <= OSOperatingTime){
+				while(waitQ.front()->interruptTime <= OSOperatingTime){
 					PCB * waiting = waitQ.front();
 					waitQ.pop();
 					waiting->state = "ready";
@@ -296,6 +351,17 @@ void os::start(){
 					}
 				}
 			}
+			
+			
+			/* Check if all processes are in waitQ
+			if(readyQ.empty() && !waitQ.empty()){
+				for(it = waitQ.front(); it < waitQ.size(); it++){
+					(*it)->state = "ready";
+					//need to add time to waitQ processes time not sure what to add
+					//(*it)->
+					(*it)
+				}
+			}*/
 
 			VMReturnStatus(); //will send to waitQ, readyQ, or terminiate process
 			

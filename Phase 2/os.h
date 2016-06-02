@@ -24,6 +24,7 @@ private:
 	void saveToPCB();   	//save status of VM to PCB
 	void restoreToVM(); 	//send PCB to VM to execute
 	void VMReturnStatus(); 	//function to handle the return status code for VM
+	void closePCBFiles();	//close all open files
 
 
 public:

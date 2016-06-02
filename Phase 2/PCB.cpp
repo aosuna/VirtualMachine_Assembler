@@ -9,7 +9,6 @@ PCB::PCB(){
 	limit = 0;
 	base = 0;
 	sp = 256;
-	clock = 0;
 	r[0] = 0;
 	r[1] = 0;
 	r[2] = 0;
@@ -21,12 +20,14 @@ PCB::PCB(){
     stackSize = 0;
     contextSwitchTime = 0;
     idleTime = 0;
+	interruptTime = 0;
 	
 	state = "new"; //all new PCB states get sent to readyQ
 }
 
 void PCB::readPCB(){
 	int input;
+	//string line;
 	int rd =  rd & 0b11; //mask destination register
 	int tempReg = tempReg & 0b1111111111; // mask temp reg
 	tempReg = sr; 	//set temp value to get destination register
@@ -35,17 +36,21 @@ void PCB::readPCB(){
 	readFile(infile.c_str());
 
 	if (readFile.is_open()) {
-		
+		//getline(readFile, line);
+		//stringstream convert(line);
+		//convert >> input;
+		//r[rd] = input;
 		readin >> input; //casting value in .in file to type int
 		r[rd] = input; //set value from .in to destination register
 
-		//readFile.close();
+		//
 	}
 	else{
 		cout << infile << " failed to open." << endl;
 		exit(1);
 	}
 }
+
 
 void PCB::writePCB(){
 	int rd =  rd & 0b11; //mask destination register
@@ -59,8 +64,6 @@ void PCB::writePCB(){
 		string line; 
 		
 		writeFile << r[rd] << endl;
-
-		writeFile.close();
 	}
 	else{
 		cout << infile << " failed to open." << endl;

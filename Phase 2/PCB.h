@@ -29,17 +29,17 @@ private:
     int ir;		//instruction register
     int sr;		//status register
     int sp;		//stack pointer
-    int clock;	//clock counter
     int base; 	//base register
     int limit;	//limit register size of the instructions
 
     int CPUTime; //read and write each take 1 CPU clock tick and 28 I/O clock ticks
     int waitingTime;
     int turnAroundTime;
-    int IOTime;
+    int IOTime; //interrupt time for I/O instructions
     int stackSize;
     int contextSwitchTime;
     int idleTime;
+	int interruptTime;
 
     ofstream writeFile;
     ifstream readFile;
@@ -50,11 +50,12 @@ private:
 
     void readPCB(); // take in sr and read in value to reg
     void writePCB(); //write to file
+	void closePCBFiles(); //close all PCB files
 
 public:
 
     PCB(); //default constructor
-
+	
     friend class os;
     
 };

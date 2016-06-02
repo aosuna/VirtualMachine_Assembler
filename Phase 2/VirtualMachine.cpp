@@ -710,14 +710,15 @@ void VirtualMachine::call(){
 }
 
 void VirtualMachine::return_(){
-	clock += 4;
 	//under flow if trying to pop status from mem[251]
 	//if sp is at location 251 there is nothing to pop at location 256 or beyond 
-	if(sp >= 256 - 5){
+	if(sp == 256 ){
 		cout << "Stack Underflow" << endl;
 		sr |= 0b10000000;
 		isRunning = false;
 	}
+	
+	clock += 4;
 	
 	pc = mem[sp++];
 	r[3] = mem[sp++];
