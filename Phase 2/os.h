@@ -4,6 +4,8 @@
 #include <queue>
 #include <list>
 #include <iterator>
+#include <fstream>
+#include <sstream>
 #include "VirtualMachine.h"
 #include "Assembler.h"
 #include "PCB.h"
@@ -14,6 +16,7 @@ class os{
 
 	Assembler as;
 	VirtualMachine vm;
+	PCB pcb;
 private:
 	list<PCB *> jobs; //create a list of object PCB
 	queue<PCB *> readyQ, waitQ; //create a queue of object PCB
@@ -25,7 +28,7 @@ private:
 	void restoreToVM(); 	//send PCB to VM to execute
 	void VMReturnStatus(); 	//function to handle the return status code for VM
 	void closePCBFiles();	//close all open files
-
+	//void readPCB();
 
 public:
 	void start();

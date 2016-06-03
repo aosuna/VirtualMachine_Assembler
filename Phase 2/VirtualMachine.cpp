@@ -46,36 +46,13 @@ VirtualMachine::VirtualMachine(){
         OPInstruc[25] = &VirtualMachine::noop;		
 }
 
-void VirtualMachine::writeClock(){
-	//print clock
-	//out used for printing clock under same fileName
-	//string out = clockWrite;
-	ofstream out(outFile.c_str(), ios::app);
-	if(out.is_open()){
-		out << "clock: " << clock << endl;
-		//outFile.close();
-	}
-	else{
-		cout << outFile << " failed to open." << endl;
-		isRunning = false;
-	}
-}
-string VirtualMachine::getFileName(){
-	string openFile = fileName;
-	return openFile;
-}
-
-void VirtualMachine::setFileName(string& fileName){
-	VirtualMachine::fileName = fileName;
-}
-
 void VirtualMachine::run(){
 	isRunning = true;
 	clock = 0;
 
 	//clear vm return status;
 	sr &= 0b0000011111;
-
+	cout << "status register in run" << sr << endl;
 	cout << "in vm run\n";
 	cout << "infile initialize: " << inFile << "\n";
 	cout << "outfile initialize: " << outFile << "\n";
@@ -98,7 +75,7 @@ void VirtualMachine::run(){
 			//check that number of clock ticks for executed programs is less than 15 
 			//if clock ticks is 15 or more strop executions, os needs to check the sr 
 			if(clock > 15){
-				sr &= 0b1100011111;
+				sr &= 0b0000011111;
 				isRunning = false;
 			}
 	}
@@ -729,23 +706,30 @@ void VirtualMachine::return_(){
 }
 
 void VirtualMachine::read(){
-	
+	cout << "***************** VM Read was called ******************\n";
 	int tempsr = sr & 0b11111111; // mask the status register to 8 bits
-	int tempReg = r[instr.f1.RD]; // set temp to register wanting to write out
+	int tempReg = instr.f1.RD; // set temp to register wanting to write out
+	
+	cout << "register: " << instr.f1.RD << endl;
 	tempReg = tempReg << 8;       // shift left to bits [9:8]
-	sr = tempsr	| tempReg;		  // put values together
-	sr &= 0b1111011111;			  // add VM Return status to bits [7:5]
+	sr = tempsr	| tempReg | 0b11000000;		  // put values together
+	//sr &= 0b1111011111;			  // add VM Return status to bits [7:5]
+	
+	cout << "		sr in vm is: " << sr << '\n';
 
 	isRunning = false;
 }
 
 void VirtualMachine::write(){
-
+	cout << "***************** VM Write was called ******************\n";
+	
 	int tempsr = sr & 0b11111111; // mask the status register to 8 bits
-	int tempReg = r[instr.f1.RD]; // set temp to register wanting to write out
+	int tempReg = instr.f1.RD; // set temp to register wanting to write out
 	tempReg = tempReg << 8;       // shift left to bits [9:8]
-	sr = tempsr	| tempReg;		  // put values together
+	sr = tempsr	| tempReg | 0b11100000;		  // put values together
 	sr &= 0b1111111111;			  // add VM Return status to bits [7:5]
+	
+	cout << "		sr in vm is: " << sr << '\n';
 
 	isRunning = false;
 }

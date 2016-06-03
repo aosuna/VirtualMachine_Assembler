@@ -34,21 +34,20 @@ private:
 
     int CPUTime; //read and write each take 1 CPU clock tick and 28 I/O clock ticks
     int waitingTime;
-    int turnAroundTime;
-    int IOTime; //interrupt time for I/O instructions
+    int turnAroundTime; //all instructions executed before IO
+    int IOTime; //IO time is a time stamp mastertime + 27
     int stackSize;
     int contextSwitchTime;
     int idleTime;
 	int interruptTime;
 
-    ofstream writeFile;
+    fstream writeFile;
     ifstream readFile;
 
     string sfile, ofile, stfile, infile, outfile; //hold the names of the filename + .s, .o, .st, .in, .out 
 	
 	string state;//hold the state of the process: new, running, waiting, ready, terminated
 
-    void readPCB(); // take in sr and read in value to reg
     void writePCB(); //write to file
 	void closePCBFiles(); //close all PCB files
 

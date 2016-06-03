@@ -1,4 +1,6 @@
 #include "os.h"
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 
@@ -9,15 +11,23 @@ os::os(){
 }
 
 void os::VMReturnStatus(){
+cout << "*************************************** VM RETURN STATUS ***********************************\n";
 	int tempSR = vm.sr;
 	tempSR = tempSR >> 5;
 	tempSR &= 0b111;
-	
+	cout << "status register " << tempSR << endl;
 	OSOperatingTime = OSOperatingTime + vm.clock;
 	running->CPUTime = running->CPUTime + vm.clock;
+	
+	// used for check in read or write
+	int tempvalue;
+	int temprd = 0b11; //mask temp register value to 2 bits
+	int temppsr = 0b1111111111; // mask temp reg
+	temppsr = running->sr; 	//set temp value to get destination register
+	temprd = temppsr >> 8; // shift right to get the destination register
 
 	switch(tempSR){
-			case 0:
+		case 0:
 			saveToPCB();
 			running->state = "ready";
 			readyQ.push(running);
@@ -27,10 +37,17 @@ void os::VMReturnStatus(){
 			running->state = "terminated";
 			//vm.clock = running->clock; //used for testing output of clock in vm.
 			//vm.writeClock();
+			//ofstream writeFile;
+			/*running->writeFile.open(running->stfile.c_str());
+			if(!running->writeFile.is_open()){
+				cout << running->stfile << "failed to open. \n";
+			}
+			//for(int i = vm.sp; i < 256; i++){
+				running->writeFile << running->CPUTime << endl;
+			//}*/
 			cout << "halt was called"  << endl;
 			break;
 		case 2:
-			
 			running->state = "terminated";
 			cout << "Out of bound called" << endl;
 			break;
@@ -53,11 +70,23 @@ void os::VMReturnStatus(){
 			running->CPUTime = running->CPUTime + 1;
 			running->IOTime = running->IOTime + 28;
 			
+			cout << "Read Operation was called " << endl;
+			
 			saveToPCB();
+			
+			running->readFile >> tempvalue;
+			running->r[temprd] = tempvalue;
+			
 			//function that read from file into register
-			PCB.readPCB();
+			cout << "sending to read \n";
 			waitQ.push(running);
-			cout << "Read Operation" << endl;
+			waitQ.front();
+			running = waitQ.front();
+			
+			cout << "		waitQ in file: " << running->infile << endl;
+			cout << "		pcb.read function called" << endl;
+			//pcb.readPCB();
+			
 			break;
 		case 7:
 			OSOperatingTime = OSOperatingTime + 1;
@@ -65,10 +94,24 @@ void os::VMReturnStatus(){
 			running->interruptTime = OSOperatingTime + 28;
 			running->CPUTime = running->CPUTime + 1;
 			running->IOTime = running->IOTime + 28;
+			
 			saveToPCB();
 			//function that writes the register to file
-			PCB.writePCB();
+			/*int tempvalue;
+			int temprd = 0b11; //mask temp register value to 2 bits
+			int tempsr = 0b1111111111; // mask temp reg
+			tempsr = running->sr; 	//set temp value to get destination register
+			temprd = temprd >> 8; // shift right to get the destination register*/
+			
+			
+			//firt check if if .out file has anything in it.
+			//if pass store everything into a temp buffer add to end of buffer
+			//write all content of buffer to .out file 
+			//running->writeFile.open(running->outfile.c_str(), ios::out | ios::app);
+			//running->writeFile << running->r[temprd];
+			
 			waitQ.push(running);
+			
 			cout << "Write Operation" << endl;
 			break;
 		default:
@@ -81,15 +124,7 @@ void os::VMReturnStatus(){
 void os::saveToPCB(){
 	cout << "********** Will save register to PCB **************" << endl;
 	cout << "process save state is: " << running->sfile << endl;
-
-	cout << "vm.pc: "<< vm.pc << endl;
-	cout << "vm.clock: "<< vm.clock << endl;
-	cout << "vm.r[0]: "<< vm.r[0] << endl;
-	cout << "vm.r[1]: "<< vm.r[1] << endl;
-	cout << "vm.r[2]: "<< vm.r[2] << endl;
-	cout << "vm.r[3]: "<< vm.r[3] << endl;
-	cout << "vm.sr: "<< vm.sr << endl;
-
+	
 	running->pc = vm.pc;
 	running->r[0] = vm.r[0];
 	running->r[1] = vm.r[1];
@@ -97,36 +132,29 @@ void os::saveToPCB(){
 	running->r[3] = vm.r[3];
 	running->sr = vm.sr;
 	running->sp = vm.sp;
+
+	cout << "	running pc: "<< running->pc << endl;
+	cout << "	running cpu: "<< running->CPUTime << endl;
+	cout << "	running r[0]: "<< running->r[0] << endl;
+	cout << "	running r[1]: "<< running->r[1] << endl;
+	cout << "	running r[2]: "<< running->r[2] << endl;
+	cout << "	running r[3]: "<< running->r[3] << endl;
+	cout << "	running sr: "<< running->sr << endl;
+
 	
-	if(vm.sp < 256){
-		PCB.writeFile(running->stfile.c_str(), ios::app);
-		if(!PCB.writeFile.is_open()){
+	
+	if(running->sp < 256){
+		running->writeFile.open(running->stfile.c_str());
+		if(!running->writeFile.is_open()){
 			cout << running->stfile << "failed to open. \n";
 		}
 		for(int i = vm.sp; i < 256; i++){
-			writeFile << vm.mem[i] << endl;
+			running->writeFile << vm.mem[i] << endl;
 		}
 	}
 }
 
 void os::restoreToVM(){
-
-	cout << "********** Restoring values from PCB to VM **************" << endl;
-	cout << "process return name is: " << running->sfile << endl;
-
-	cout << "running base PCB: " << running->base << endl;
-	cout << "running limit PCB: "<< vm.limit << endl;
-	cout << "running pc PCB: " << running->pc << endl;
-	cout << "current running clock PCB: " << running->clock << endl;
-	cout << "running ofile PCB: " << running->ofile << endl;
-	cout << "running infile PCB: " << running->infile << endl;
-	cout << "running outfile PCB: " << running->outfile << endl;
-	cout << "running r[0] PCB: " << running->r[0] << endl;
-	cout << "running r[1] PCB: " << running->r[1] << endl;
-	cout << "running r[2] PCB: " << running->r[2] << endl;
-	cout << "running r[3] PCB: " << running->r[3] << endl;
-	cout << "running sr PCB: " << running->sr << endl;
-
 
 	vm.base = running->base;
 	vm.limit = running->limit;
@@ -140,20 +168,43 @@ void os::restoreToVM(){
 	vm.r[3] = running->r[3];
 	vm.sr = running->sr;
 	vm.sp = running->sp;
+
+	cout << "********** Restoring values from PCB to VM **************" << endl;
+	cout << "process return name is: " << running->sfile << endl;
+
+	cout << "running base PCB: " << running->base << endl;
+	cout << "running limit PCB: "<< vm.limit << endl;
+	cout << "running pc PCB: " << running->pc << endl;
+	//cout << "current running clock PCB: " << running->clock << endl;
+	cout << "running ofile PCB: " << running->ofile << endl;
+	cout << "running infile PCB: " << running->infile << endl;
+	cout << "running outfile PCB: " << running->outfile << endl;
+	cout << "running r[0] PCB: " << running->r[0] << endl;
+	cout << "running r[1] PCB: " << running->r[1] << endl;
+	cout << "running r[2] PCB: " << running->r[2] << endl;
+	cout << "running r[3] PCB: " << running->r[3] << endl;
+	cout << "running sr PCB: " << running->sr << endl;
+
 	
-	if(running.sp < 256){
+	if(running->sp < 256){
+	cout << "				SP in VM has values <-----------------\n";
 		int info;
 		string rline;
 		int tempSP = running->sp;
-		PCB.readFile.open(running->stfile.c_str());
+		running->readFile.open(running->stfile.c_str());
 		
-		if(PCB.readFile.is_open()){
-			while(PCB.readFile.good()){
-				getline(PCB.readFile, rline)
+		if(running->readFile.is_open()){
+		cout << "line in .st \n";
+			while(running->readFile.good()){
+				getline(running->readFile, rline);
 				if(rline == ""){
+					cout << "no line read" << endl;
 					continue;
 				}else{
-					stringstream convert(line);
+				
+					cout << "             " << rline << endl;
+					
+					stringstream convert(rline);
 					convert >> info;
 					vm.mem[tempSP] = info;
 					tempSP++;
@@ -166,14 +217,14 @@ void os::restoreToVM(){
 }
 
 void os::closePCBFiles(){
-	list<PCB *>::iterator it;
+	list<PCB *>::iterator iter;
 	
-	for(it = jobs.begin(); it < jobs.size(); it++){
-		if((*it)->writeFile.is_open()){
-			(*it)->writeFile.close();
+	for(iter = jobs.begin(); iter != jobs.end(); iter++){
+		if((*iter)->writeFile.is_open()){
+			(*iter)->writeFile.close();
 		}
-		if((*it)->readFile.is_open()){
-			(*it)->readFile.close();
+		if((*iter)->readFile.is_open()){
+			(*iter)->readFile.close();
 		}
 	}
 }
@@ -224,6 +275,10 @@ void os::start(){
 				p->stfile = stline;
 				p->infile = iline;
 				p->outfile = outline;
+				
+				//open files for each PCB
+				p->readFile.open(p->infile.c_str());
+				p->writeFile.open(p->outfile.c_str());
 				
 				//store values into vm.mem
 				ifstream asCode(oline.c_str() );
@@ -304,6 +359,7 @@ void os::start(){
 	/**********************************************delete*up**************************************************/
 	
 ///////////////////////////////////////////////////////// RUNNING PROCESSES /////////////////////////////////////////////////////////////////
+	
 	//use readyQ to run process
 		while(!readyQ.empty() || !waitQ.empty()){
 
@@ -342,6 +398,8 @@ void os::start(){
 			//if it is waiting completed, change state to ready and send to readyQ
 			if(!waitQ.empty()){
 				while(waitQ.front()->interruptTime <= OSOperatingTime){
+				cout << "wait Q was not empty \n";
+				cout << "process in waitQ " << waitQ.front()->sfile << endl;
 					PCB * waiting = waitQ.front();
 					waitQ.pop();
 					waiting->state = "ready";
@@ -356,6 +414,7 @@ void os::start(){
 			/* Check if all processes are in waitQ
 			if(readyQ.empty() && !waitQ.empty()){
 				for(it = waitQ.front(); it < waitQ.size(); it++){
+					if((*it)->
 					(*it)->state = "ready";
 					//need to add time to waitQ processes time not sure what to add
 					//(*it)->
