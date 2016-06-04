@@ -4,8 +4,6 @@
 #include <queue>
 #include <list>
 #include <iterator>
-#include <fstream>
-#include <sstream>
 #include "VirtualMachine.h"
 #include "Assembler.h"
 #include "PCB.h"

@@ -26,24 +26,42 @@ PCB::PCB(){
 	state = "new"; //all new PCB states get sent to readyQ
 }
 
+void PCB::readPCB(){
+	cout << "************************** READPCB ****************************************\n";
+	int rd = 0b11; //mask destination register
+	int tempReg = 0b1111111111; // mask temp reg
+	tempReg = sr; 	//set temp value to get destination register
+	rd = tempReg >> 8; // shift right to get the destination register
+	
+	if(readFile.is_open()){
+		//stringstream convert(infile);	
+		readFile >> r[rd];
+	}else {
+		cout << infile << " failed to open\n";
+		exit(1);
+	}
+	cout << "value stored to register: " << rd << endl;
+	cout << "value in register is: " << r[rd] << endl;
+}
+
 void PCB::writePCB(){
 cout << "************************** WRITEPCB ****************************************\n"; 
 cout << "write PCB called: \n";
 cout << "write to file: " << outfile <<  "\n";
 
-	int rd =  rd & 0b11; //mask destination register
+	int rd = rd & 0b11; //mask destination register
 	int tempReg = tempReg & 0b1111111111; // mask temp reg
 	tempReg = sr; 	//set temp value to get destination register
 	rd = tempReg >> 8; // shift right to get the destination register
 	
-	writeFile.open(outfile.c_str(), ios::app);
+	//writeFile.open(outfile.c_str(), ios::ate);
 
 	if (writeFile.is_open()) {
 		//string line; 
 		writeFile << r[rd] << endl;
 	}
 	else{
-		cout << infile << " failed to open." << endl;
+		cout << outfile << " failed to open." << endl;
 		exit(1);
 	}
 }

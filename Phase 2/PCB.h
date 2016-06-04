@@ -41,13 +41,14 @@ private:
     int idleTime;
 	int interruptTime;
 
-    fstream writeFile;
+    ofstream writeFile;
     ifstream readFile;
 
     string sfile, ofile, stfile, infile, outfile; //hold the names of the filename + .s, .o, .st, .in, .out 
 	
 	string state;//hold the state of the process: new, running, waiting, ready, terminated
 
+	void readPCB(); //read into file
     void writePCB(); //write to file
 	void closePCBFiles(); //close all PCB files
 
