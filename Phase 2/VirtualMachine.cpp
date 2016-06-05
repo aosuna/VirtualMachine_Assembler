@@ -689,7 +689,7 @@ void VirtualMachine::call(){
 void VirtualMachine::return_(){
 	//under flow if trying to pop status from mem[251]
 	//if sp is at location 251 there is nothing to pop at location 256 or beyond 
-	if(sp == 256 ){
+	if(sp >= 256 ){
 		cout << "Stack Underflow" << endl;
 		sr |= 0b10000000;
 		isRunning = false;
@@ -707,12 +707,12 @@ void VirtualMachine::return_(){
 
 void VirtualMachine::read(){
 	cout << "***************** VM Read was called ******************\n";
-	int tempsr = sr & 0b11111111; // mask the status register to 8 bits
+	int tempsr = sr | 0b11000000; // mask the status register to 8 bits
 	int tempReg = instr.f1.RD; // set temp to register wanting to write out
 	
 	cout << "register: " << instr.f1.RD << endl;
 	tempReg = tempReg << 8;       // shift left to bits [9:8]
-	sr = tempsr	| tempReg | 0b11000000;		  // put values together
+	sr = tempReg | 0b11000000 | tempsr;		  // put values together
 	//sr &= 0b1111011111;			  // add VM Return status to bits [7:5]
 	
 	cout << "		sr in vm is: " << sr << '\n';
@@ -723,11 +723,11 @@ void VirtualMachine::read(){
 void VirtualMachine::write(){
 	cout << "***************** VM Write was called ******************\n";
 	
-	int tempsr = sr & 0b11111111; // mask the status register to 8 bits
+	int tempsr = sr | 0b11100000; // mask the status register to 8 bits
 	int tempReg = instr.f1.RD; // set temp to register wanting to write out
 	tempReg = tempReg << 8;       // shift left to bits [9:8]
 	sr = tempsr	| tempReg | 0b11100000;		  // put values together
-	sr &= 0b1111111111;			  // add VM Return status to bits [7:5]
+	//sr &= 0b1111111111;			  // add VM Return status to bits [7:5]
 	
 	cout << "		sr in vm is: " << sr << '\n';
 

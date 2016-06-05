@@ -1,19 +1,10 @@
 TODO
 
-NEED TO TEST IF I/O OPERATION WORKING CORRECTLY
-NEED TO TEST IF SENDING FORM WAIT TO READYQ
-
-NEED TO ADD TIME TO WAITQ OPERATION WHEN THERE IS NOTHING IN READYQ (NOT SURE WHAT TO ADD)
-
-
-need to modify:
-1:	Any Read, Write instructions need to be handled by PCB (NEED TO TEST)
-
 TEST:
-1: need to test new waitQ function. it checks if wait is not empty and compares main OS time, if time is
-	in wait is less than time in main OS then send to ready. 
-2: check if stack grew. need to test if working properly
-3: return stack added, need to check if working properly 
+1: need check if IO is being performed on correct register
+2: need to check if .st file is being loaded with the correct stact output
+3: check if stack grew. need to test if working properly
+4: return stack added, need to check if working properly 
 
 Need to handle PCB:
 
@@ -21,7 +12,7 @@ Need to handle PCB:
 2:	prog's clock
 
 PROGRESS:
-1: modify your OS to handle programs with I/O
+1: modify your OS to handle programs with I/O 
 2: try several compute and I/O intensive programs. 
 3: modify your OS to gather accounting information. 
 4: modify your OS to handle programs with subroutine calls (which grow stack).

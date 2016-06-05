@@ -28,20 +28,19 @@ PCB::PCB(){
 
 void PCB::readPCB(){
 	cout << "************************** READPCB ****************************************\n";
-	int rd = 0b11; //mask destination register
-	int tempReg = 0b1111111111; // mask temp reg
-	tempReg = sr; 	//set temp value to get destination register
-	rd = tempReg >> 8; // shift right to get the destination register
+
+	int tempReg = sr; // mask temp reg
+	int trd = tempReg >> 8; // shift right to get the destination register
 	
 	if(readFile.is_open()){
 		//stringstream convert(infile);	
-		readFile >> r[rd];
+		readFile >> r[trd];
 	}else {
 		cout << infile << " failed to open\n";
 		exit(1);
 	}
-	cout << "value stored to register: " << rd << endl;
-	cout << "value in register is: " << r[rd] << endl;
+	cout << "value stored to register: " << trd << endl;
+	cout << "value in register is: " << r[trd] << endl;
 }
 
 void PCB::writePCB(){
@@ -49,16 +48,14 @@ cout << "************************** WRITEPCB ***********************************
 cout << "write PCB called: \n";
 cout << "write to file: " << outfile <<  "\n";
 
-	int rd = rd & 0b11; //mask destination register
-	int tempReg = tempReg & 0b1111111111; // mask temp reg
-	tempReg = sr; 	//set temp value to get destination register
-	rd = tempReg >> 8; // shift right to get the destination register
+	int tempReg = sr; // mask temp reg
+	int trd = tempReg >> 8; // shift right to get the destination register
 	
 	//writeFile.open(outfile.c_str(), ios::ate);
 
 	if (writeFile.is_open()) {
 		//string line; 
-		writeFile << r[rd] << endl;
+		writeFile << r[trd] << endl;
 	}
 	else{
 		cout << outfile << " failed to open." << endl;

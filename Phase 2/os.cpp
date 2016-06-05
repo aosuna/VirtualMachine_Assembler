@@ -1,6 +1,7 @@
 #include "os.h"
 #include <fstream>
 #include <sstream>
+#include <bitset>
 
 using namespace std;
 
@@ -12,6 +13,9 @@ os::os(){
 
 void os::VMReturnStatus(){
 cout << "*************************************** VM RETURN STATUS ***********************************\n";
+cout << "value of vm "<< bitset<32>(vm.sr) << endl;
+	saveToPCB();
+
 	int tempSR = vm.sr;
 	tempSR = tempSR >> 5;
 	tempSR &= 0b111;
@@ -20,7 +24,7 @@ cout << "*************************************** VM RETURN STATUS **************
 	running->CPUTime = running->CPUTime + vm.clock;
 	
 	// used for check in read
-	int tempvalue;
+	/*int tempvalue;
 	int temprd = 0b11; //mask temp register value to 2 bits
 	int temppsr = 0b1111111111; // mask temp reg
 	temppsr = running->sr; 	//set temp value to get destination register
@@ -28,23 +32,13 @@ cout << "*************************************** VM RETURN STATUS **************
 
 	switch(tempSR){
 		case 0:
-			saveToPCB();
 			running->state = "ready";
 			readyQ.push(running);
 			cout << "time slice" << endl;
 			break;
 		case 1:
 			running->state = "terminated";
-			//vm.clock = running->clock; //used for testing output of clock in vm.
-			//vm.writeClock();
-			//ofstream writeFile;
-			/*running->writeFile.open(running->stfile.c_str());
-			if(!running->writeFile.is_open()){
-				cout << running->stfile << "failed to open. \n";
-			}
-			//for(int i = vm.sp; i < 256; i++){
-				running->writeFile << running->CPUTime << endl;
-			//}*/
+			cout << "size of readyQ: " << readyQ.size() << endl;
 			cout << "halt was called"  << endl;
 			break;
 		case 2:
@@ -71,21 +65,13 @@ cout << "*************************************** VM RETURN STATUS **************
 			running->CPUTime = running->CPUTime + 1;
 			running->IOTime = running->IOTime + 28;
 			
-			saveToPCB();
-			
 			cout << "		running->readPCB function called" << endl;
 			cout << "		sending to read \n";
+
 			running->readPCB();
 			
-			cout << "	after running->readPCB() called \n";
-			cout << "	value stored in PCB is: " << running->r[temprd] << "\n";
-			
-			
-			
-			//running->readFile >> tempvalue;
-			//running->r[temprd] = tempvalue;
-			
-			//function that read from file into register
+			//cout << "	after running->readPCB() called \n";
+			//cout << "	value stored in PCB is: " << running->r[temprd] << "\n";
 			
 			waitQ.push(running);
 			
@@ -103,16 +89,9 @@ cout << "*************************************** VM RETURN STATUS **************
 			running->CPUTime = running->CPUTime + 1;
 			running->IOTime = running->IOTime + 28;
 			
-			saveToPCB();
-			
 			cout << "		pcb.write function called" << endl;
 			running->writePCB();
-			
-			//firt check if if .out file has anything in it.
-			//if pass store everything into a temp buffer add to end of buffer
-			//write all content of buffer to .out file 
-			//running->writeFile.open(running->outfile.c_str(), ios::out | ios::app);
-			//running->writeFile << running->r[temprd];
+
 			
 			waitQ.push(running);
 			
@@ -141,6 +120,7 @@ void os::saveToPCB(){
 	running->r[3] = vm.r[3];
 	running->sr = vm.sr;
 	running->sp = vm.sp;
+	running->CPUTime = running->CPUTime + vm.clock;
 
 	cout << "	running pc: "<< running->pc << endl;
 	cout << "	running cpu: "<< running->CPUTime << endl;
@@ -151,7 +131,7 @@ void os::saveToPCB(){
 	cout << "	running sr: "<< running->sr << endl;
 
 	
-	
+	/*
 	if(running->sp < 256){
 		running->writeFile.open(running->stfile.c_str());
 		if(!running->writeFile.is_open()){
@@ -160,7 +140,7 @@ void os::saveToPCB(){
 		for(int i = vm.sp; i < 256; i++){
 			running->writeFile << vm.mem[i] << endl;
 		}
-	}
+	}*/
 }
 
 void os::restoreToVM(){
@@ -195,7 +175,7 @@ void os::restoreToVM(){
 	cout << "running sr PCB: " << running->sr << endl;
 
 	
-	if(running->sp < 256){
+	/*if(running->sp < 256){
 	cout << "				SP in VM has values <-----------------\n";
 		int info;
 		string rline;
@@ -222,7 +202,7 @@ void os::restoreToVM(){
 		}else{
 			cout << running->stfile << "failed to open. \n";
 		}
-	}
+	}*/
 }
 
 void os::closePCBFiles(){
@@ -376,6 +356,9 @@ void os::start(){
 			//check that running is pointing to a PCB if pass then run process
 			//if fail there is a process in waitQ
 			cout << "checking that readyQ is not empty\n";
+			cout << "readyQ size " << readyQ.size() << endl;
+			cout << "waitQ size " << waitQ.size() << endl;
+
 			if(!readyQ.empty()){
 			cout << "	****readQ is not empty****\n";
 				running = readyQ.front();
@@ -403,9 +386,9 @@ void os::start(){
 					if((*it)->state == "ready"){
 						(*it)->waitingTime = (*it)->waitingTime + vm.clock;
 					}
-					else{
+					/*else{
 						continue;
-					}
+					}*/
 				}
 			}
 
@@ -413,33 +396,44 @@ void os::start(){
 			//if it is waiting completed, change state to ready and send to readyQ
 			cout << "checking waitQ is not empty and waitQ interrupt time is less than OS master time\n";
 			if(!waitQ.empty()){
+				
 			cout << "waitQ not empty, checking waitQ time\n";
 				while(waitQ.front()->interruptTime <= OSOperatingTime){
 				cout << "wait Q was not empty  and its interrupt time less then master time\n";
 				cout << "process in waitQ " << waitQ.front()->sfile << endl;
-					PCB * waiting = waitQ.front();
+					PCB * waiting;
+					waiting = waitQ.front();
 					waitQ.pop();
 					waiting->state = "ready";
 					readyQ.push(waiting);
-					if(waitQ.size() == 0){
+					if(waitQ.empty()){
 						break;
 					}
+					waiting = NULL;
 				}
+				//waiting = NULL;
 			}
-			
+
 			//Check if all processes are in waitQ
 			cout << "checking if readyQ is empty and waitQ is not empty thn send a process to readyQ\n";
 			if(readyQ.empty() && !waitQ.empty()){
 			cout << "------------------all processes are in waitQ --------------------\n";
-				PCB * pwaiting = waitQ.front(); //waiting process
-				waitQ.pop();
+				PCB * pwaiting;
+				pwaiting = waitQ.front(); //waiting process
 				pwaiting->state = "ready";
+				waitQ.pop();
 				readyQ.push(pwaiting);
 				int tempwaitingtime = pwaiting->IOTime - OSOperatingTime;
 				OSOperatingTime = OSOperatingTime + tempwaitingtime;
+				pwaiting = NULL;
 			} // end all processes in waitQ, sent one process to execute in ready state
+			
+			if(running != NULL){
+				VMReturnStatus(); //will send to waitQ, readyQ, or terminiate process
 
-			VMReturnStatus(); //will send to waitQ, readyQ, or terminiate process
+				running = NULL;
+			}
+			
 		}
 
 /**********************************************delete*down**************************************************/
