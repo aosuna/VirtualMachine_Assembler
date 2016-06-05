@@ -668,7 +668,7 @@ void VirtualMachine::jumpg(){
 
 void VirtualMachine::call(){
 	clock += 4;
-	
+	cout << "--------- VM CALL ---------\n";
 	if(sp < limit + 6){
 		cout << "Stack Overflow" << endl;
 		//set[7:5] 010 stack overflow
@@ -682,6 +682,12 @@ void VirtualMachine::call(){
 	mem[--sp] = r[2];
 	mem[--sp] = r[3];
 	mem[--sp] = pc;
+
+	cout << "storing values into stack: \n";
+	for (int i  = sp; i < 256; i++){
+		cout << "	" << mem[sp] << endl;
+	}
+
 	
 	pc = instr.f2.ADDR + base;
 }

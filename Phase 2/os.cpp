@@ -128,19 +128,28 @@ void os::saveToPCB(){
 	cout << "	running r[1]: "<< running->r[1] << endl;
 	cout << "	running r[2]: "<< running->r[2] << endl;
 	cout << "	running r[3]: "<< running->r[3] << endl;
-	cout << "	running sr: "<< running->sr << endl;
+	cout << "	running sr: " << running->sr << endl;
+	cout << " 	running sp: " << running->sp << endl;
 
 	
-	/*
-	if(running->sp < 256){
-		running->writeFile.open(running->stfile.c_str());
-		if(!running->writeFile.is_open()){
+	if(running->sp <= 255){
+
+	cout << "			save SP in VM has values <-----------------\n";
+	cout << "			save SP in VM has values <-----------------\n";
+	cout << "			save SP in VM has values <-----------------\n";
+	cout << "			save SP in VM has values <-----------------\n";
+	cout << "			save SP in VM has values <-----------------\n";
+
+		//running->writeSTFile.open(running->stfile.c_str());
+		if(!running->readSTFile.is_open()){
 			cout << running->stfile << "failed to open. \n";
 		}
-		for(int i = vm.sp; i < 256; i++){
-			running->writeFile << vm.mem[i] << endl;
+		else{
+			for(int i = running->sp; i < 256; i++){
+				running->readSTFile << vm.mem[i] << endl;
+			}
 		}
-	}*/
+	}
 }
 
 void os::restoreToVM(){
@@ -173,14 +182,20 @@ void os::restoreToVM(){
 	cout << "running r[2] PCB: " << running->r[2] << endl;
 	cout << "running r[3] PCB: " << running->r[3] << endl;
 	cout << "running sr PCB: " << running->sr << endl;
+	cout << "running sp PCB: " << running->sp << endl;
 
 	
-	/*if(running->sp < 256){
-	cout << "				SP in VM has values <-----------------\n";
+	if(running->sp <= 255){
+
+	cout << "			resotre	SP in VM has values <-----------------\n";
+	cout << "			restore	SP in VM has values <-----------------\n";
+	cout << "			restore	SP in VM has values <-----------------\n";
+	cout << "			restore	SP in VM has values <-----------------\n";
+
 		int info;
 		string rline;
 		int tempSP = running->sp;
-		running->readFile.open(running->stfile.c_str());
+		//running->readSTFile.open(running->stfile.c_str());
 		
 		if(running->readFile.is_open()){
 		cout << "line in .st \n";
@@ -202,7 +217,8 @@ void os::restoreToVM(){
 		}else{
 			cout << running->stfile << "failed to open. \n";
 		}
-	}*/
+		running->readSTFile.close();
+	}
 }
 
 void os::closePCBFiles(){
@@ -268,6 +284,8 @@ void os::start(){
 				//open files for each PCB
 				p->readFile.open(p->infile.c_str());
 				p->writeFile.open(p->outfile.c_str());
+				p->readSTFile.open(p->stfile.c_str(), ios::in | ios::out);
+				//running->writeSTFile.open(running->stfile.c_str());
 				
 				//store values into vm.mem
 				ifstream asCode(oline.c_str() );

@@ -44,6 +44,10 @@ private:
     ofstream writeFile;
     ifstream readFile;
 
+    fstream readSTFile;
+    
+    ofstream writeSTFile;
+
     string sfile, ofile, stfile, infile, outfile; //hold the names of the filename + .s, .o, .st, .in, .out 
 	
 	string state;//hold the state of the process: new, running, waiting, ready, terminated
