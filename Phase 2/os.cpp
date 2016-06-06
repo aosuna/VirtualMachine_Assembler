@@ -112,6 +112,8 @@ cout << "value of vm "<< bitset<32>(vm.sr) << endl;
 void os::saveToPCB(){
 	cout << "********** Will save register to PCB **************" << endl;
 	cout << "process save state is: " << running->sfile << endl;
+
+	cout << "vm.sp value is: " << vm.sp << endl;
 	
 	running->pc = vm.pc;
 	running->r[0] = vm.r[0];
@@ -132,23 +134,25 @@ void os::saveToPCB(){
 	cout << " 	running sp: " << running->sp << endl;
 
 	
-	if(running->sp <= 255){
+	if(running->sp < 256){
+		ofstream saveSTFile(running->stfile.c_str());
 
-	cout << "			save SP in VM has values <-----------------\n";
-	cout << "			save SP in VM has values <-----------------\n";
-	cout << "			save SP in VM has values <-----------------\n";
-	cout << "			save SP in VM has values <-----------------\n";
-	cout << "			save SP in VM has values <-----------------\n";
+		cout << "			save SP in VM has values <-----------------\n";
+		cout << "			save SP in VM has values <-----------------\n";
+		cout << "			save SP in VM has values <-----------------\n";
+		cout << "			save SP in VM has values <-----------------\n";
+		cout << "			save SP in VM has values <-----------------\n";
 
 		//running->writeSTFile.open(running->stfile.c_str());
-		if(!running->readSTFile.is_open()){
+		if(!saveSTFile.is_open()){
 			cout << running->stfile << "failed to open. \n";
 		}
 		else{
-			for(int i = running->sp; i < 256; i++){
-				running->readSTFile << vm.mem[i] << endl;
+			for(int i = vm.sp; i < 256; i++){
+				saveSTFile << vm.mem[i] << endl;
 			}
 		}
+		saveSTFile.close();
 	}
 }
 
@@ -185,7 +189,8 @@ void os::restoreToVM(){
 	cout << "running sp PCB: " << running->sp << endl;
 
 	
-	if(running->sp <= 255){
+	if(running->sp < 256){
+		ifstream restoreSTFile(running->stfile.c_str());
 
 	cout << "			resotre	SP in VM has values <-----------------\n";
 	cout << "			restore	SP in VM has values <-----------------\n";
@@ -197,10 +202,10 @@ void os::restoreToVM(){
 		int tempSP = running->sp;
 		//running->readSTFile.open(running->stfile.c_str());
 		
-		if(running->readFile.is_open()){
+		if(restoreSTFile.is_open()){
 		cout << "line in .st \n";
-			while(running->readFile.good()){
-				getline(running->readFile, rline);
+			while(restoreSTFile.good()){
+				getline(restoreSTFile, rline);
 				if(rline == ""){
 					cout << "no line read" << endl;
 					continue;
@@ -217,7 +222,7 @@ void os::restoreToVM(){
 		}else{
 			cout << running->stfile << "failed to open. \n";
 		}
-		running->readSTFile.close();
+		restoreSTFile.close();
 	}
 }
 
@@ -284,8 +289,6 @@ void os::start(){
 				//open files for each PCB
 				p->readFile.open(p->infile.c_str());
 				p->writeFile.open(p->outfile.c_str());
-				p->readSTFile.open(p->stfile.c_str(), ios::in | ios::out);
-				//running->writeSTFile.open(running->stfile.c_str());
 				
 				//store values into vm.mem
 				ifstream asCode(oline.c_str() );
@@ -409,7 +412,7 @@ void os::start(){
 					}*/
 				}
 			}
-
+			cout << "virtual machine stack pointer before sending to VMReturnStatus: " << vm.sp << endl;
 			//check if process is in waitQ is less than total OS time
 			//if it is waiting completed, change state to ready and send to readyQ
 			cout << "checking waitQ is not empty and waitQ interrupt time is less than OS master time\n";
@@ -447,6 +450,7 @@ void os::start(){
 			} // end all processes in waitQ, sent one process to execute in ready state
 			
 			if(running != NULL){
+				cout << "virtual machine stack pointer before sending to VMReturnStatus: " << vm.sp << endl;
 				VMReturnStatus(); //will send to waitQ, readyQ, or terminiate process
 
 				running = NULL;

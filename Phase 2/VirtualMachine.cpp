@@ -667,7 +667,7 @@ void VirtualMachine::jumpg(){
 }
 
 void VirtualMachine::call(){
-	clock += 4;
+	
 	cout << "--------- VM CALL ---------\n";
 	if(sp < limit + 6){
 		cout << "Stack Overflow" << endl;
@@ -675,7 +675,8 @@ void VirtualMachine::call(){
 		sr |= 0b01100000;
 		isRunning = false;
 	}
-	
+	clock += 4;
+
 	mem[--sp] = sr;
 	mem[--sp] = r[0];
 	mem[--sp] = r[1];
@@ -683,9 +684,10 @@ void VirtualMachine::call(){
 	mem[--sp] = r[3];
 	mem[--sp] = pc;
 
+	cout << "in vm sp is: " << sp << endl;
 	cout << "storing values into stack: \n";
 	for (int i  = sp; i < 256; i++){
-		cout << "	" << mem[sp] << endl;
+		cout << "	" << mem[i] << endl;
 	}
 
 	
@@ -693,6 +695,7 @@ void VirtualMachine::call(){
 }
 
 void VirtualMachine::return_(){
+	cout << "--------- VM RETURN ---------\n";
 	//under flow if trying to pop status from mem[251]
 	//if sp is at location 251 there is nothing to pop at location 256 or beyond 
 	if(sp >= 256 ){
@@ -702,6 +705,11 @@ void VirtualMachine::return_(){
 	}
 	
 	clock += 4;
+
+	cout << "in vm sp is: " << sp << endl;
+	cout << "restoring values from stack: \n";
+
+	int tempsp = sp;
 	
 	pc = mem[sp++];
 	r[3] = mem[sp++];
@@ -709,6 +717,10 @@ void VirtualMachine::return_(){
 	r[1] = mem[sp++];
 	r[0] = mem[sp++];
 	sr = mem[sp++];
+
+	for(int i = tempsp; i < 256; i++){
+		cout << "	" << mem[i] << endl;
+	}
 }
 
 void VirtualMachine::read(){

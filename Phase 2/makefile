@@ -11,4 +11,4 @@ PCB.o: PCB.cpp PCB.h
 	g++ -std=c++14 -c PCB.cpp
 	
 clean: 
-	rm *.o *.out os progs
+	rm *.o *.out *.st os progs
