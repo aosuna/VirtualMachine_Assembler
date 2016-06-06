@@ -22,13 +22,6 @@ cout << "value of vm "<< bitset<32>(vm.sr) << endl;
 	cout << "return status is " << tempSR << endl;
 	OSOperatingTime = OSOperatingTime + vm.clock;
 	running->CPUTime = running->CPUTime + vm.clock;
-	
-	// used for check in read
-	/*int tempvalue;
-	int temprd = 0b11; //mask temp register value to 2 bits
-	int temppsr = 0b1111111111; // mask temp reg
-	temppsr = running->sr; 	//set temp value to get destination register
-	temprd = temppsr >> 8; // shift right to get the destination register */
 
 	switch(tempSR){
 		case 0:
@@ -86,6 +79,7 @@ cout << "value of vm "<< bitset<32>(vm.sr) << endl;
 			OSOperatingTime = OSOperatingTime + 1;
 			running->state = "waiting";
 			running->interruptTime = OSOperatingTime + 28;
+			running->turnAroundTime = running->turnAroundTime + running->CPUTime;
 			running->CPUTime = running->CPUTime + 1;
 			running->IOTime = running->IOTime + 28;
 			
@@ -135,6 +129,8 @@ void os::saveToPCB(){
 
 	
 	if(running->sp < 256){
+		int count = 0;//used to get stack size
+		
 		ofstream saveSTFile(running->stfile.c_str());
 
 		cout << "			save SP in VM has values <-----------------\n";
@@ -150,10 +146,16 @@ void os::saveToPCB(){
 		else{
 			for(int i = vm.sp; i < 256; i++){
 				saveSTFile << vm.mem[i] << endl;
+				count++; // used to get stack size
 			}
 		}
 		saveSTFile.close();
+
+	running->stackSize = count; //setting max stack size 
+
 	}
+
+	
 }
 
 void os::restoreToVM(){
@@ -457,6 +459,21 @@ void os::start(){
 			}
 			
 		}
+
+	list<PCB *>::iterator it;
+	for(it = jobs.begin(); it != jobs.end(); it++){
+		ofstream writeTiming((*it)->outfile.c_str(), ios::app);
+		if(writeTiming.is_open()){
+			writeTiming << "\n\n\n";
+			writeTiming << "Process Time: " << (*it)->CPUTime << endl;
+			writeTiming << "Waiting Time: " << (*it)->waitingTime << endl;
+			writeTiming << "Turn Around Time: " << (*it)->turnAroundTime << endl;
+			writeTiming << "I/O Time: " << (*it)->IOTime << endl;
+			writeTiming << "Stack Size: " << (*it)->stackSize << endl;
+			writeTiming << "Context Switch Time: " << (*it)->contextSwitchTime << endl;
+			writeTiming << "Interrupt Time: " << (*it)->interruptTime << endl;
+		}
+	}
 
 /**********************************************delete*down**************************************************/
 	

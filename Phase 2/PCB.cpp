@@ -50,8 +50,6 @@ cout << "write to file: " << outfile <<  "\n";
 
 	int tempReg = sr; // mask temp reg
 	int trd = tempReg >> 8; // shift right to get the destination register
-	
-	//writeFile.open(outfile.c_str(), ios::ate);
 
 	if (writeFile.is_open()) {
 		//string line; 
