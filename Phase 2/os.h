@@ -14,7 +14,7 @@ class os{
 
 	Assembler as;
 	VirtualMachine vm;
-	PCB pcb;
+
 private:
 	list<PCB *> jobs; //create a list of object PCB
 	queue<PCB *> readyQ, waitQ; //create a queue of object PCB

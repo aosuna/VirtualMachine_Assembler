@@ -26,7 +26,7 @@ PCB::PCB(){
 	state = "new"; //all new PCB states get sent to readyQ
 }
 
-void PCB::readPCB(){
+void PCB::readPCB(){ //handles read in VM, save value from file to register destination
 	cout << "************************** READPCB ****************************************\n";
 
 	int tempReg = sr; // mask temp reg
@@ -43,7 +43,7 @@ void PCB::readPCB(){
 	cout << "value in register is: " << r[trd] << endl;
 }
 
-void PCB::writePCB(){
+void PCB::writePCB(){ //handles read in VM, write value from file to register destination
 cout << "************************** WRITEPCB ****************************************\n"; 
 cout << "write PCB called: \n";
 cout << "write to file: " << outfile <<  "\n";

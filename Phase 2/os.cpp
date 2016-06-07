@@ -127,9 +127,10 @@ void os::saveToPCB(){
 	cout << "	running sr: " << running->sr << endl;
 	cout << " 	running sp: " << running->sp << endl;
 
+	//int count = 0;
 	
 	if(running->sp < 256){
-		int count = 0;//used to get stack size
+	//used to get stack size
 		
 		ofstream saveSTFile(running->stfile.c_str());
 
@@ -146,15 +147,16 @@ void os::saveToPCB(){
 		else{
 			for(int i = vm.sp; i < 256; i++){
 				saveSTFile << vm.mem[i] << endl;
-				count++; // used to get stack size
+				//count++; // used to get stack size
 			}
 		}
 		saveSTFile.close();
-
-	running->stackSize = count; //setting max stack size 
-
+		/*if (running->stackSize == 0)
+				running->stackSize = count; //setting max stack size 
+		}
+		else if( count > running->stackSize){
+			running->stackSize = count;*/
 	}
-
 	
 }
 
@@ -194,14 +196,15 @@ void os::restoreToVM(){
 	if(running->sp < 256){
 		ifstream restoreSTFile(running->stfile.c_str());
 
-	cout << "			resotre	SP in VM has values <-----------------\n";
-	cout << "			restore	SP in VM has values <-----------------\n";
-	cout << "			restore	SP in VM has values <-----------------\n";
-	cout << "			restore	SP in VM has values <-----------------\n";
+		cout << "			resotre	SP in VM has values <-----------------\n";
+		cout << "			restore	SP in VM has values <-----------------\n";
+		cout << "			restore	SP in VM has values <-----------------\n";
+		cout << "			restore	SP in VM has values <-----------------\n";
 
 		int info;
 		string rline;
 		int tempSP = running->sp;
+		int count = 0;
 		//running->readSTFile.open(running->stfile.c_str());
 		
 		if(restoreSTFile.is_open()){
@@ -219,12 +222,20 @@ void os::restoreToVM(){
 					convert >> info;
 					vm.mem[tempSP] = info;
 					tempSP++;
+					count++;
 				}
 			}
 		}else{
 			cout << running->stfile << "failed to open. \n";
 		}
 		restoreSTFile.close();
+
+		if (running->stackSize == 0){
+				running->stackSize = count; //setting max stack size 
+		}
+		else if( count > running->stackSize){
+			running->stackSize = count;
+		}
 	}
 }
 
@@ -409,9 +420,6 @@ void os::start(){
 					if((*it)->state == "ready"){
 						(*it)->waitingTime = (*it)->waitingTime + vm.clock;
 					}
-					/*else{
-						continue;
-					}*/
 				}
 			}
 			cout << "virtual machine stack pointer before sending to VMReturnStatus: " << vm.sp << endl;
@@ -438,16 +446,16 @@ void os::start(){
 			}
 
 			//Check if all processes are in waitQ
-			cout << "checking if readyQ is empty and waitQ is not empty thn send a process to readyQ\n";
+			cout << "checking if readyQ is empty and waitQ is not empty then send a process to readyQ\n";
 			if(readyQ.empty() && !waitQ.empty()){
-			cout << "------------------all processes are in waitQ --------------------\n";
+			cout << "------------------ all processes are in waitQ --------------------\n";
 				PCB * pwaiting;
 				pwaiting = waitQ.front(); //waiting process
 				pwaiting->state = "ready";
 				waitQ.pop();
 				readyQ.push(pwaiting);
-				int tempwaitingtime = pwaiting->IOTime - OSOperatingTime;
-				OSOperatingTime = OSOperatingTime + tempwaitingtime;
+				pwaiting->idleTime = OSOperatingTime - pwaiting->IOTime;
+				OSOperatingTime = OSOperatingTime + pwaiting->idleTime;
 				pwaiting = NULL;
 			} // end all processes in waitQ, sent one process to execute in ready state
 			
@@ -461,19 +469,48 @@ void os::start(){
 		}
 
 	list<PCB *>::iterator it;
+	int osidelTime = 0;
+	double sumOfJobs = 0.0;
 	for(it = jobs.begin(); it != jobs.end(); it++){
 		ofstream writeTiming((*it)->outfile.c_str(), ios::app);
 		if(writeTiming.is_open()){
-			writeTiming << "\n\n\n";
+			writeTiming << "\n";
+			writeTiming << "Process Name: " << (*it)->sfile << "\n\n";
 			writeTiming << "Process Time: " << (*it)->CPUTime << endl;
 			writeTiming << "Waiting Time: " << (*it)->waitingTime << endl;
 			writeTiming << "Turn Around Time: " << (*it)->turnAroundTime << endl;
 			writeTiming << "I/O Time: " << (*it)->IOTime << endl;
+			if((*it)->idleTime < 0){
+				(*it)->idleTime = 0;
+			}
+			writeTiming << "Idle Time: " << (*it)->idleTime << endl;
 			writeTiming << "Stack Size: " << (*it)->stackSize << endl;
 			writeTiming << "Context Switch Time: " << (*it)->contextSwitchTime << endl;
 			writeTiming << "Interrupt Time: " << (*it)->interruptTime << endl;
 		}
+		writeTiming.close();
+		osidelTime = osidelTime + (*it)->idleTime;
+		sumOfJobs = sumOfJobs + (*it)->CPUTime;
 	}
+
+
+
+	double systemTime = osidelTime + OSContextSwitchTime;
+	double cpuUtil = sumOfJobs / OSOperatingTime;
+	string osfile = "os.out";
+	
+	ofstream writeSystemTime(osfile.c_str());
+	if(writeSystemTime.is_open()){
+		writeSystemTime << "System Information\n\n";
+		writeSystemTime << "System Time: " << systemTime << endl;
+		writeSystemTime << "CPU Utilization: " << cpuUtil << endl;
+	}
+
+	/*
+	System CPU Utilization: percent of time CPU is busy = (final clock - sum of all Idle Times) / final clock 
+	User CPU Utilization: percent of the time CPU executes user jobs = (sum of all jobs' CPU time) / final clock 
+	Throughput: number of processes completed per second. Assume 1 second = 1000 clock ticks.
+	*/
 
 /**********************************************delete*down**************************************************/
 	
