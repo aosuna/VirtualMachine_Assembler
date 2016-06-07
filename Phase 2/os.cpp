@@ -26,6 +26,7 @@ cout << "value of vm "<< bitset<32>(vm.sr) << endl;
 	switch(tempSR){
 		case 0:
 			running->state = "ready";
+			running->CPUTime = running->CPUTime + 15;
 			readyQ.push(running);
 			cout << "time slice" << endl;
 			break;
@@ -56,15 +57,12 @@ cout << "value of vm "<< bitset<32>(vm.sr) << endl;
 			running->state = "waiting";
 			running->interruptTime = OSOperatingTime + 28;
 			running->CPUTime = running->CPUTime + 1;
-			running->IOTime = running->IOTime + 28;
+			running->IOTime = running->IOTime + 27;
 			
 			cout << "		running->readPCB function called" << endl;
 			cout << "		sending to read \n";
 
 			running->readPCB();
-			
-			//cout << "	after running->readPCB() called \n";
-			//cout << "	value stored in PCB is: " << running->r[temprd] << "\n";
 			
 			waitQ.push(running);
 			
@@ -81,7 +79,7 @@ cout << "value of vm "<< bitset<32>(vm.sr) << endl;
 			running->interruptTime = OSOperatingTime + 28;
 			running->turnAroundTime = running->turnAroundTime + running->CPUTime;
 			running->CPUTime = running->CPUTime + 1;
-			running->IOTime = running->IOTime + 28;
+			running->IOTime = running->IOTime + 27;
 			
 			cout << "		pcb.write function called" << endl;
 			running->writePCB();
@@ -93,7 +91,6 @@ cout << "value of vm "<< bitset<32>(vm.sr) << endl;
 			running = waitQ.back();
 			
 			cout << "		waitQ out file: " << running->outfile << endl;
-			
 			
 			break;
 		default:
@@ -395,11 +392,13 @@ void os::start(){
 				restoreToVM();
 				vm.run();
 
+				running->contextSwitchTime = running->contextSwitchTime + 5;
 				OSOperatingTime = OSOperatingTime + 5;
-				OSContextSwitchTime = OSContextSwitchTime + 5;
+
+				//OSContextSwitchTime = OSContextSwitchTime + 5;
 				
 				//update all nonterminated processes with context switch time
-				list<PCB *>::iterator it;
+				/*list<PCB *>::iterator it;
 				for(it = jobs.begin(); it != jobs.end(); it++){
 					if((*it)->state == "terminated"){
 						continue;
@@ -407,8 +406,9 @@ void os::start(){
 					else{
 						(*it)->contextSwitchTime = (*it)->contextSwitchTime + 5;
 					}
-				}
+				}*/
 				//add the number of clock tick of the running process as wait time for all proceses in readyQ
+				list<PCB *>::iterator it;
 				for(it = jobs.begin(); it != jobs.end(); it++){
 					if((*it)->state == "ready"){
 						(*it)->waitingTime = (*it)->waitingTime + vm.clock;
@@ -433,6 +433,7 @@ void os::start(){
 					if(waitQ.empty()){
 						break;
 					}
+		
 					waiting = NULL;
 				}
 				//waiting = NULL;
@@ -447,7 +448,7 @@ void os::start(){
 				pwaiting->state = "ready";
 				waitQ.pop();
 				readyQ.push(pwaiting);
-				pwaiting->idleTime = OSOperatingTime - pwaiting->IOTime;
+				pwaiting->idleTime = pwaiting->interruptTime - OSOperatingTime;
 				OSOperatingTime = OSOperatingTime + pwaiting->idleTime;
 				pwaiting = NULL;
 			} // end all processes in waitQ, sent one process to execute in ready state
@@ -478,7 +479,7 @@ void os::start(){
 			}
 			writeTiming << "Idle Time: " << (*it)->idleTime << endl;
 			writeTiming << "Stack Size: " << (*it)->stackSize << endl;
-			writeTiming << "Context Switch Time: " << (*it)->contextSwitchTime << endl;
+			//writeTiming << "Context Switch Time: " << (*it)->contextSwitchTime << endl;
 			writeTiming << "Interrupt Time: " << (*it)->interruptTime << endl;
 		}
 		writeTiming.close();

@@ -20,7 +20,7 @@ private:
 	queue<PCB *> readyQ, waitQ; //create a queue of object PCB
 	PCB * running; //create a pointer to PCB  
 	int OSContextSwitchTime; //total context switch time for all processes
-	int OSOperatingTime;
+	int OSOperatingTime; //master time
 
 	void saveToPCB();   	//save status of VM to PCB
 	void restoreToVM(); 	//send PCB to VM to execute
