@@ -126,11 +126,8 @@ void os::saveToPCB(){
 	cout << "	running r[3]: "<< running->r[3] << endl;
 	cout << "	running sr: " << running->sr << endl;
 	cout << " 	running sp: " << running->sp << endl;
-
-	//int count = 0;
 	
 	if(running->sp < 256){
-	//used to get stack size
 		
 		ofstream saveSTFile(running->stfile.c_str());
 
@@ -140,7 +137,7 @@ void os::saveToPCB(){
 		cout << "			save SP in VM has values <-----------------\n";
 		cout << "			save SP in VM has values <-----------------\n";
 
-		//running->writeSTFile.open(running->stfile.c_str());
+
 		if(!saveSTFile.is_open()){
 			cout << running->stfile << "failed to open. \n";
 		}
@@ -151,11 +148,6 @@ void os::saveToPCB(){
 			}
 		}
 		saveSTFile.close();
-		/*if (running->stackSize == 0)
-				running->stackSize = count; //setting max stack size 
-		}
-		else if( count > running->stackSize){
-			running->stackSize = count;*/
 	}
 	
 }
@@ -230,6 +222,7 @@ void os::restoreToVM(){
 		}
 		restoreSTFile.close();
 
+		//gets largest stack size written to file
 		if (running->stackSize == 0){
 				running->stackSize = count; //setting max stack size 
 		}
@@ -505,34 +498,7 @@ void os::start(){
 		writeSystemTime << "System Time: " << systemTime << endl;
 		writeSystemTime << "CPU Utilization: " << cpuUtil << endl;
 	}
-
-	/*
-	System CPU Utilization: percent of time CPU is busy = (final clock - sum of all Idle Times) / final clock 
-	User CPU Utilization: percent of the time CPU executes user jobs = (sum of all jobs' CPU time) / final clock 
-	Throughput: number of processes completed per second. Assume 1 second = 1000 clock ticks.
-	*/
-
-/**********************************************delete*down**************************************************/
 	
-	//check list<PCB *> jobs to see if values are populated
-	/*list<PCB *>::iterator it;
-	for(it = jobs.begin(); it != jobs.end(); it++){
-		cout << "Process name: ";
-		cout << (*it)->sfile << "\n";
-		cout << "  " << (*it)->base << "\n";
-		cout << "  " << (*it)->limit << "\n";
-		cout << "  " << (*it)->state << "\n";
-		vm.oFile = (*it)->ofile;
-		vm.inFile = (*it)->infile;
-		vm.outFile = (*it)->outfile;
-		vm.base = (*it)->base;
-		vm.limit = (*it)->limit;
-		vm.pc = (*it)->base;
-		vm.clock = (*it)->clock;
-		vm.run();
-		vm.isRunning = true;
-	}*/
-/**********************************************delete*up**************************************************/
 };
 
 int main(){
