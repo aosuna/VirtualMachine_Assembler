@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <bitset>
+#include <vector>
 
 using namespace std;
 
@@ -442,14 +443,16 @@ void os::start(){
 			//Check if all processes are in waitQ
 			cout << "checking if readyQ is empty and waitQ is not empty then send a process to readyQ\n";
 			if(readyQ.empty() && !waitQ.empty()){
+				int tempidle = 0;
 			cout << "------------------ all processes are in waitQ --------------------\n";
 				PCB * pwaiting;
 				pwaiting = waitQ.front(); //waiting process
 				pwaiting->state = "ready";
 				waitQ.pop();
 				readyQ.push(pwaiting);
-				pwaiting->idleTime = pwaiting->interruptTime - OSOperatingTime;
-				OSOperatingTime = OSOperatingTime + pwaiting->idleTime;
+				tempidle = pwaiting->interruptTime - OSOperatingTime;
+				OSOperatingTime = OSOperatingTime + tempidle;
+				pwaiting->idleTime = pwaiting->idleTime + tempidle;
 				pwaiting = NULL;
 			} // end all processes in waitQ, sent one process to execute in ready state
 			
